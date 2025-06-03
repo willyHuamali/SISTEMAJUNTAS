@@ -1,0 +1,158 @@
+:root {
+  --primary-color: #3498db;
+  --secondary-color: #2c3e50;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  --light-color: #f8f9fa;
+  --dark-color: #343a40;
+}
+
+/* Estilos generales */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding-top: 70px; /* Ajusta según la altura de tu navbar */
+  background-color: #f5f5f5;
+  color: #333;
+  line-height: 1.6;
+
+  
+
+}
+
+/* Encabezado y navegación */
+.navbar {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: var(--secondary-color) !important;
+}
+
+.navbar-brand {
+  font-weight: 600;
+  color: white !important;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.85);
+  transition: color 0.3s ease;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+  color: white;
+}
+
+/* Contenedor principal */
+.container {
+  max-width: 1200px;
+  padding: 20px;
+}
+
+/* Cards */
+.card {
+  transition: all 0.3s ease;
+  border: none;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  margin-bottom: 20px;
+  background-color: white;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+  padding: 15px 20px;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+/* Botones */
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-outline-primary {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* Estados de juntas */
+.bg-Activa {
+  background-color: var(--success-color) !important;
+}
+
+.bg-Cerrada {
+  background-color: var(--secondary-color) !important;
+}
+
+.bg-Cancelada {
+  background-color: var(--danger-color) !important;
+}
+
+/* Sección hero */
+.hero-section {
+  padding: 60px 0;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  margin-bottom: 40px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .display-4 {
+    font-size: 2.5rem;
+  }
+  
+  .hero-section {
+    padding: 40px 0;
+    text-align: center;
+  }
+  
+  .navbar-collapse {
+    padding: 10px 0;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+/* Mejoras para el sidebar (dashboard) */
+#sidebar {
+  background-color: var(--secondary-color);
+  color: white;
+  min-height: 100vh;
+}
+
+#sidebar .nav-link {
+  color: rgba(255, 255, 255, 0.75);
+  padding: 10px 15px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+}
+
+#sidebar .nav-link:hover,
+#sidebar .nav-link.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+#sidebar .nav-link i {
+  margin-right: 10px;
+  width: 20px;
+  text-align: center;
+}

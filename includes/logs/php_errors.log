@@ -1,0 +1,10 @@
+[02-Jun-2025 16:32:43 America/Lima] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function Usuario::__construct(), 0 passed in C:\xampp\htdocs\sistemajuntas\registro.php on line 11 and exactly 1 expected in C:\xampp\htdocs\sistemajuntas\clases\usuario.php:6
+Stack trace:
+#0 C:\xampp\htdocs\sistemajuntas\registro.php(11): Usuario->__construct()
+#1 {main}
+  thrown in C:\xampp\htdocs\sistemajuntas\clases\usuario.php on line 6
+[02-Jun-2025 16:48:23 America/Lima] PHP Fatal error:  Uncaught Error: Call to undefined method Usuario::existeUsuario() in C:\xampp\htdocs\sistemajuntas\clases\usuario.php:20
+Stack trace:
+#0 C:\xampp\htdocs\sistemajuntas\registro.php(27): Usuario->registrar(Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\sistemajuntas\clases\usuario.php on line 20
