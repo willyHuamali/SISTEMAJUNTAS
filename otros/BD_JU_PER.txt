@@ -1,0 +1,158 @@
+-- Insertar roles básicos
+INSERT INTO Roles (NombreRol, Descripcion) VALUES 
+('Administrador', 'Acceso completo al sistema'),
+('Coordinador', 'Puede crear y administrar juntas'),
+('Participante', 'Usuario regular que participa en juntas'),
+('Auditor', 'Solo puede ver información, no modificarla'),
+('Cobrador', 'Puede registrar pagos y gestionar cobranzas');
+
+-- Insertar permisos del sistema
+INSERT INTO Permisos (NombrePermiso, Descripcion, Codigo) VALUES
+-- Permisos de administración
+('Gestionar Usuarios', 'Crear, editar y eliminar usuarios', 'users.manage'),
+('Gestionar Roles', 'Crear, editar y eliminar roles', 'roles.manage'),
+('Gestionar Permisos', 'Asignar permisos a roles', 'permissions.manage'),
+('Gestionar Configuraciones', 'Modificar configuraciones del sistema', 'settings.manage'),
+
+-- Permisos de juntas
+('Crear Juntas', 'Crear nuevas juntas', 'juntas.create'),
+('Editar Juntas', 'Modificar juntas existentes', 'juntas.edit'),
+('Cerrar Juntas', 'Cerrar juntas completadas', 'juntas.close'),
+('Ver Juntas', 'Ver listado de juntas', 'juntas.view'),
+('Ver Detalle Junta', 'Ver detalles completos de una junta', 'juntas.detail'),
+
+-- Permisos de participantes
+('Agregar Participantes', 'Agregar usuarios a juntas', 'participants.add'),
+('Remover Participantes', 'Remover usuarios de juntas', 'participants.remove'),
+('Ver Participantes', 'Ver listado de participantes', 'participants.view'),
+
+-- Permisos de pagos
+('Registrar Pagos', 'Registrar pagos de participantes', 'payments.register'),
+('Ver Pagos', 'Ver historial de pagos', 'payments.view'),
+('Aprobar Pagos', 'Aprobar pagos registrados', 'payments.approve'),
+('Generar Reportes Pagos', 'Generar reportes de pagos', 'payments.reports'),
+
+-- Permisos de desembolsos
+('Realizar Desembolsos', 'Realizar desembolsos a participantes', 'disbursements.create'),
+('Ver Desembolsos', 'Ver historial de desembolsos', 'disbursements.view'),
+('Aprobar Desembolsos', 'Aprobar desembolsos pendientes', 'disbursements.approve'),
+
+-- Permisos de garantías
+('Gestionar Garantías', 'Registrar y gestionar garantías', 'guarantees.manage'),
+('Ver Garantías', 'Ver información de garantías', 'guarantees.view'),
+
+-- Permisos de reportes
+('Generar Reportes', 'Generar reportes del sistema', 'reports.generate'),
+('Exportar Datos', 'Exportar datos a diferentes formatos', 'data.export'),
+
+-- Permisos de auditoría
+('Ver Auditoría', 'Ver registros de auditoría', 'audit.view'),
+('Ver Historial Sesiones', 'Ver historial de sesiones de usuarios', 'sessions.view');
+
+-- Asignar permisos al rol Administrador (todos los permisos)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Administrador';
+
+-- Asignar permisos al rol Coordinador
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Coordinador'
+AND p.Codigo IN (
+    'juntas.create', 'juntas.edit', 'juntas.close', 'juntas.view', 'juntas.detail',
+    'participants.add', 'participants.remove', 'participants.view',
+    'payments.register', 'payments.view', 'payments.reports',
+    'disbursements.create', 'disbursements.view',
+    'guarantees.manage', 'guarantees.view',
+    'reports.generate', 'data.export'
+);
+
+-- Asignar permisos al rol Cobrador
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Cobrador'
+AND p.Codigo IN (
+    'payments.register', 'payments.view',
+    'disbursements.view',
+    'guarantees.view',
+    'juntas.view', 'juntas.detail',
+    'participants.view'
+);
+
+-- Asignar permisos al rol Participante
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Participante'
+AND p.Codigo IN (
+    'juntas.view', 'juntas.detail',
+    'payments.view',
+    'disbursements.view',
+    'guarantees.view'
+);
+
+-- Asignar permisos al rol Auditor
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Auditor'
+AND p.Codigo IN (
+    'audit.view', 'sessions.view',
+    'juntas.view', 'juntas.detail',
+    'participants.view',
+    'payments.view', 'payments.reports',
+    'disbursements.view',
+    'guarantees.view',
+    'reports.generate'
+);
+
+-- Insertar configuraciones iniciales del sistema
+INSERT INTO Configuraciones (Clave, Valor, Tipo, Descripcion)
+VALUES
+('COMISION_POR_DEFECTO', '2.5', 'decimal', 'Porcentaje de comisión por defecto para cada pago'),
+('PENALIDAD_POR_DEFECTO', '5.0', 'decimal', 'Porcentaje de penalidad por defecto por pago atrasado'),
+('DIAS_GRACIA_PENALIDAD', '3', 'entero', 'Días de gracia antes de aplicar penalidad'),
+('MONEDA_PRINCIPAL', 'PEN', 'texto', 'Moneda principal del sistema'),
+('REQUIERE_GARANTIA', '0', 'booleano', 'Indica si por defecto las juntas requieren garantía'),
+('PUNTOS_CREDITO_INICIAL', '100', 'entero', 'Puntos de crédito iniciales para nuevos usuarios'),
+('DIAS_NOTIFICACION_PAGO', '2', 'entero', 'Días antes para notificar pago pendiente'),
+('MAX_PARTICIPANTES_JUNTA', '10', 'entero', 'Máximo número de participantes por junta');
+
+
+-- Agregar el permiso de notificaciones a la tabla Permisos
+INSERT INTO Permisos (NombrePermiso, Descripcion, Codigo) VALUES
+('Ver Notificaciones', 'Ver y gestionar notificaciones del sistema', 'notifications.view');
+
+-- Asignar permiso de notificaciones al Administrador
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Administrador' AND p.Codigo = 'notifications.view';
+
+-- Asignar permiso de notificaciones al Coordinador
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Coordinador' AND p.Codigo = 'notifications.view';
+
+-- Asignar permiso de notificaciones al Participante
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Participante' AND p.Codigo = 'notifications.view';
+
+-- Asignar permiso de notificaciones al Cobrador
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Cobrador' AND p.Codigo = 'notifications.view';
+
+-- Asignar permiso de notificaciones al Auditor
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Auditor' AND p.Codigo = 'notifications.view';
+

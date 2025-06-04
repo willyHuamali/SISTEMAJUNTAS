@@ -1,0 +1,254 @@
+
+sql
+-- Creación de la base de datos
+CREATE DATABASE IF NOT EXISTS SistemaJuntas;
+
+USE SistemaJuntas;
+
+-- Tabla de Roles (para control de permisos)
+CREATE TABLE Roles (
+    RolID INT PRIMARY KEY AUTO_INCREMENT,
+    NombreRol VARCHAR(50) NOT NULL UNIQUE,
+    Descripcion VARCHAR(255),
+    FechaCreacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Activo BIT DEFAULT 1
+);
+
+-- Tabla de Permisos
+CREATE TABLE Permisos (
+    PermisoID INT PRIMARY KEY AUTO_INCREMENT,
+    NombrePermiso VARCHAR(100) NOT NULL UNIQUE,
+    Descripcion VARCHAR(255),
+    Codigo VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Tabla de Roles_Permisos (relación muchos a muchos)
+CREATE TABLE Roles_Permisos (
+    RolPermisoID INT PRIMARY KEY AUTO_INCREMENT,
+    RolID INT NOT NULL,
+    PermisoID INT NOT NULL,
+    FechaAsignacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (RolID) REFERENCES Roles(RolID),
+    FOREIGN KEY (PermisoID) REFERENCES Permisos(PermisoID),
+    UNIQUE (RolID, PermisoID)
+);
+
+-- Tabla de Configuraciones del Sistema
+CREATE TABLE Configuraciones (
+    ConfiguracionID INT PRIMARY KEY AUTO_INCREMENT,
+    Clave VARCHAR(100) NOT NULL UNIQUE,
+    Valor VARCHAR(255) NOT NULL,
+    Tipo VARCHAR(50) NOT NULL, -- 'decimal', 'entero', 'texto', 'booleano'
+    Descripcion VARCHAR(255),
+    FechaModificacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ModificadoPor INT
+);
+
+-- Tabla de Usuarios (para autenticación y datos básicos)
+CREATE TABLE Usuarios (
+    UsuarioID INT PRIMARY KEY AUTO_INCREMENT,
+    Nombre VARCHAR(100) NOT NULL,
+    Apellido VARCHAR(100) NOT NULL,
+    DNI VARCHAR(15) NOT NULL UNIQUE,
+    Email VARCHAR(100) NOT NULL UNIQUE,
+    Telefono VARCHAR(20),
+    Direccion VARCHAR(255),
+    NombreUsuario VARCHAR(50) NOT NULL UNIQUE,
+    ContrasenaHash VARBINARY(256) NOT NULL,
+    Salt VARBINARY(16) NOT NULL,
+    FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UltimoLogin DATETIME,
+    Activo BIT DEFAULT 1,
+    RolID INT NOT NULL,
+    PuntosCredito INT DEFAULT 100,
+    FOREIGN KEY (RolID) REFERENCES Roles(RolID)
+);
+
+-- Ahora que la tabla Usuarios existe, agregamos la FK en Configuraciones
+ALTER TABLE Configuraciones ADD FOREIGN KEY (ModificadoPor) REFERENCES Usuarios(UsuarioID);
+
+-- Tabla de Cuentas Bancarias (para recibir los pagos)
+CREATE TABLE CuentasBancarias (
+    CuentaID INT PRIMARY KEY AUTO_INCREMENT,
+    UsuarioID INT NOT NULL,
+    NumeroCuenta VARCHAR(50) NOT NULL,
+    Banco VARCHAR(100) NOT NULL,
+    TipoCuenta VARCHAR(50) NOT NULL,
+    Moneda VARCHAR(10) DEFAULT 'PEN',
+    FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Activa BIT DEFAULT 1,
+    EsPrincipal BIT DEFAULT 0,
+    FOREIGN KEY (UsuarioID) REFERENCES Usuarios(UsuarioID),
+    UNIQUE (NumeroCuenta, Banco)
+);
+
+-- Tabla de Garantías
+CREATE TABLE Garantias (
+    GarantiaID INT PRIMARY KEY AUTO_INCREMENT,
+    UsuarioID INT NOT NULL,
+    TipoGarantia VARCHAR(50) NOT NULL,
+    Descripcion VARCHAR(255),
+    ValorEstimado DECIMAL(12,2),
+    FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Estado VARCHAR(20) DEFAULT 'Activa',
+    DocumentoURL VARCHAR(255),
+    FOREIGN KEY (UsuarioID) REFERENCES Usuarios(UsuarioID),
+    CHECK (Estado IN ('Activa', 'Liberada', 'Retenida'))
+);
+
+-- Tabla de Juntas (grupos de préstamo rotativo)
+CREATE TABLE Juntas (
+    JuntaID INT PRIMARY KEY AUTO_INCREMENT,
+    CodigoJunta VARCHAR(20) NOT NULL UNIQUE,
+    NombreJunta VARCHAR(100) NOT NULL,
+    Descripcion VARCHAR(255),
+    MontoAporte DECIMAL(10,2) NOT NULL,
+    Moneda VARCHAR(10) DEFAULT 'PEN',
+    FrecuenciaPago VARCHAR(20) NOT NULL,
+    FechaInicio DATE NOT NULL,
+    FechaCierre DATE,
+    Estado VARCHAR(20) DEFAULT 'Activa',
+    CreadaPor INT NOT NULL,
+    FechaCreacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    RequiereGarantia BIT DEFAULT 0,
+    MontoGarantia DECIMAL(10,2) DEFAULT 0,
+    PorcentajeComision DECIMAL(5,2) DEFAULT 0,
+    PorcentajePenalidad DECIMAL(5,2) DEFAULT 0,
+    DiasGraciaPenalidad INT DEFAULT 0,
+    FOREIGN KEY (CreadaPor) REFERENCES Usuarios(UsuarioID),
+    CONSTRAINT chk_estado CHECK (Estado IN ('Activa', 'Cerrada', 'Cancelada')),
+    CONSTRAINT chk_comision CHECK (PorcentajeComision >= 0 AND PorcentajeComision <= 100),
+    CONSTRAINT chk_penalidad CHECK (PorcentajePenalidad >= 0 AND PorcentajePenalidad <= 100)
+);
+
+-- Tabla de Participantes en Juntas (relación muchos a muchos)
+CREATE TABLE ParticipantesJuntas (
+    ParticipanteID INT PRIMARY KEY AUTO_INCREMENT,
+    JuntaID INT NOT NULL,
+    UsuarioID INT NOT NULL,
+    OrdenRecepcion INT NOT NULL,
+    CuentaID INT NOT NULL,
+    GarantiaID INT,
+    FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Activo BIT DEFAULT 1,
+    FechaRetiro DATE,
+    MotivoRetiro VARCHAR(255),
+    FOREIGN KEY (JuntaID) REFERENCES Juntas(JuntaID),
+    FOREIGN KEY (UsuarioID) REFERENCES Usuarios(UsuarioID),
+    FOREIGN KEY (CuentaID) REFERENCES CuentasBancarias(CuentaID),
+    FOREIGN KEY (GarantiaID) REFERENCES Garantias(GarantiaID),
+    UNIQUE (JuntaID, UsuarioID),
+    UNIQUE (JuntaID, OrdenRecepcion)
+);
+
+-- Tabla de Pagos (registro de aportes)
+CREATE TABLE Pagos (
+    PagoID INT PRIMARY KEY AUTO_INCREMENT,
+    ParticipanteID INT NOT NULL,
+    Periodo INT NOT NULL,
+    FechaPago DATE NOT NULL,
+    FechaVencimiento DATE NOT NULL,
+    MontoBase DECIMAL(10,2) NOT NULL,
+    MontoComision DECIMAL(10,2) DEFAULT 0,
+    MontoPenalidad DECIMAL(10,2) DEFAULT 0,
+    MontoTotal DECIMAL(10,2) NOT NULL,
+    Estado VARCHAR(20) DEFAULT 'Pendiente',
+    MetodoPago VARCHAR(50),
+    Comprobante VARCHAR(100),
+    Observaciones VARCHAR(255),
+    FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    RegistradoPor INT NOT NULL,
+    FOREIGN KEY (ParticipanteID) REFERENCES ParticipantesJuntas(ParticipanteID),
+    FOREIGN KEY (RegistradoPor) REFERENCES Usuarios(UsuarioID),
+    CONSTRAINT chk_estado_pago CHECK (Estado IN ('Pagado', 'Pendiente', 'Atrasado', 'Parcial', 'Cancelado'))
+);
+
+-- Tabla de Desembolsos (cuando se entrega el fondo acumulado)
+CREATE TABLE Desembolsos (
+    DesembolsoID INT PRIMARY KEY AUTO_INCREMENT,
+    JuntaID INT NOT NULL,
+    ParticipanteID INT NOT NULL,
+    Periodo INT NOT NULL,
+    Monto DECIMAL(10,2) NOT NULL,
+    FechaDesembolso DATE NOT NULL,
+    Estado VARCHAR(20) DEFAULT 'Completado',
+    Comprobante VARCHAR(100),
+    Notas VARCHAR(255),
+    FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    RegistradoPor INT NOT NULL,
+    FOREIGN KEY (JuntaID) REFERENCES Juntas(JuntaID),
+    FOREIGN KEY (ParticipanteID) REFERENCES ParticipantesJuntas(ParticipanteID),
+    FOREIGN KEY (RegistradoPor) REFERENCES Usuarios(UsuarioID),
+    CONSTRAINT chk_estado_desembolso CHECK (Estado IN ('Completado', 'Pendiente', 'Fallido', 'Retenido'))
+);
+
+-- Tabla de Transacciones (para historial financiero completo)
+CREATE TABLE Transacciones (
+    TransaccionID INT PRIMARY KEY AUTO_INCREMENT,
+    TipoTransaccion VARCHAR(50) NOT NULL,
+    ReferenciaID INT,
+    TablaReferencia VARCHAR(50),
+    Monto DECIMAL(12,2) NOT NULL,
+    Moneda VARCHAR(10) DEFAULT 'PEN',
+    FechaTransaccion DATETIME NOT NULL,
+    Descripcion VARCHAR(255),
+    UsuarioID INT,
+    JuntaID INT,
+    Estado VARCHAR(20) DEFAULT 'Completada',
+    FOREIGN KEY (UsuarioID) REFERENCES Usuarios(UsuarioID),
+    FOREIGN KEY (JuntaID) REFERENCES Juntas(JuntaID)
+);
+
+-- Tabla de Historial de Sesiones (para auditoría)
+CREATE TABLE HistorialSesiones (
+    SesionID INT PRIMARY KEY AUTO_INCREMENT,
+    UsuarioID INT NOT NULL,
+    FechaInicio DATETIME NOT NULL,
+    FechaFin DATETIME,
+    DireccionIP VARCHAR(50),
+    Dispositivo VARCHAR(255),
+    UserAgent VARCHAR(500),
+    FOREIGN KEY (UsuarioID) REFERENCES Usuarios(UsuarioID)
+);
+
+-- Tabla de Notificaciones
+CREATE TABLE Notificaciones (
+    NotificacionID INT PRIMARY KEY AUTO_INCREMENT,
+    UsuarioID INT NOT NULL,
+    Titulo VARCHAR(100) NOT NULL,
+    Mensaje VARCHAR(500) NOT NULL,
+    Tipo VARCHAR(50) NOT NULL,
+    RelacionID INT,
+    TablaRelacion VARCHAR(50),
+    FechaCreacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Leida BIT DEFAULT 0,
+    FechaLectura DATETIME,
+    FOREIGN KEY (UsuarioID) REFERENCES Usuarios(UsuarioID)
+);
+
+-- Tabla de Reportes
+CREATE TABLE Reportes (
+    ReporteID INT PRIMARY KEY AUTO_INCREMENT,
+    Nombre VARCHAR(100) NOT NULL,
+    Descripcion VARCHAR(255),
+    QuerySQL TEXT NOT NULL,
+    Parametros TEXT,
+    RolID INT,
+    FechaCreacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CreadoPor INT NOT NULL,
+    Activo BIT DEFAULT 1,
+    FOREIGN KEY (RolID) REFERENCES Roles(RolID),
+    FOREIGN KEY (CreadoPor) REFERENCES Usuarios(UsuarioID)
+);
+
+-- Índices para mejorar el rendimiento
+CREATE INDEX IX_Usuarios_DNI ON Usuarios(DNI);
+CREATE INDEX IX_Usuarios_Email ON Usuarios(Email);
+CREATE INDEX IX_Juntas_Estado ON Juntas(Estado);
+CREATE INDEX IX_Pagos_ParticipanteID ON Pagos(ParticipanteID);
+CREATE INDEX IX_Pagos_Estado ON Pagos(Estado);
+CREATE INDEX IX_Pagos_FechaVencimiento ON Pagos(FechaVencimiento);
+CREATE INDEX IX_Desembolsos_JuntaID ON Desembolsos(JuntaID);
+CREATE INDEX IX_ParticipantesJuntas_UsuarioID ON ParticipantesJuntas(UsuarioID);
+CREATE INDEX IX_Transacciones_FechaTransaccion ON Transacciones(FechaTransaccion);
+CREATE INDEX IX_Transacciones_TipoTransaccion ON Transacciones(TipoTransaccion);

@@ -1,0 +1,28 @@
+/sistema-juntas/
+│
+├── assets/
+│   ├── css/
+│   │   └── styles.css
+│   ├── js/
+│   │   └── scripts.js
+│   └── img/
+│
+├── includes/
+│   ├── config.php
+│   ├── auth.php
+│   ├── header.php
+│   ├── footer.php
+│   ├── db.php
+│   ├── navbar.php
+│   └── functions.php
+│
+├── clases/
+│   ├── Usuario.php
+│   ├── Database.php
+│   └── Junta.php
+│
+├── index.php
+├── login.php
+├── registro.php
+├── dashboard.php
+└── logout.php
