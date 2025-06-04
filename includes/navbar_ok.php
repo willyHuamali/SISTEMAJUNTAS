@@ -6,31 +6,7 @@ $usuarioLogueado = isset($_SESSION['usuario_id']);
 $rolUsuario = $_SESSION['rol_id'] ?? null;
 $nombreUsuario = $_SESSION['nombre_usuario'] ?? '';
 
-// Inicializar variables de notificaciones
-$notificacionesNoLeidas = 0;
-$notificacionesRecientes = [];
-
-if ($usuarioLogueado && tienePermiso('notifications.view', $rolUsuario)) {
-    try {
-        $database = new Database();
-        $db = $database->getConnection();
-        
-        // Contar notificaciones no leídas
-        $query = "SELECT COUNT(*) as total FROM Notificaciones WHERE UsuarioID = ? AND Leida = 0";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$_SESSION['usuario_id']]);
-        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-        $notificacionesNoLeidas = $resultado['total'] ?? 0;
-        
-        // Obtener notificaciones recientes
-        $query = "SELECT * FROM Notificaciones WHERE UsuarioID = ? ORDER BY FechaCreacion DESC LIMIT 5";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$_SESSION['usuario_id']]);
-        $notificacionesRecientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        error_log("Error al obtener notificaciones: " . $e->getMessage());
-    }
-}
+// El resto del código del navbar...
 ?>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm py-1">
@@ -156,36 +132,21 @@ if ($usuarioLogueado && tienePermiso('notifications.view', $rolUsuario)) {
             <ul class="navbar-nav ms-auto">
                 <?php if($usuarioLogueado): ?>
                     <!-- Notificaciones -->
-                    <?php if($usuarioLogueado && tienePermiso('notifications.view', $rolUsuario)): ?>
+                    <?php if(tienePermiso('notifications.view', $rolUsuario)): ?>
                         <li class="nav-item dropdown">
-                            <a class="nav-link position-relative" href="#" id="navbarNotificaciones" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="nav-link position-relative" href="#" id="navbarNotificaciones" role="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-bell"></i>
-                                <?php if($notificacionesNoLeidas > 0): ?>
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                        <?= $notificacionesNoLeidas ?>
-                                        <span class="visually-hidden">notificaciones no leídas</span>
-                                    </span>
-                                <?php endif; ?>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    3 <span class="visually-hidden">notificaciones no leídas</span>
+                                </span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarNotificaciones">
-                                <li><h6 class="dropdown-header">Notificaciones recientes</h6></li>
-                                <?php if(empty($notificacionesRecientes)): ?>
-                                    <li><a class="dropdown-item text-muted">No hay notificaciones</a></li>
-                                <?php else: ?>
-                                    <?php foreach($notificacionesRecientes as $notif): ?>
-                                        <li>
-                                            <a class="dropdown-item <?= $notif['Leida'] ? 'text-muted' : 'fw-bold' ?>" href="#">
-                                                <div class="d-flex justify-content-between">
-                                                    <span><?= htmlspecialchars($notif['Titulo']) ?></span>
-                                                    <small class="text-muted"><?= time_elapsed_string($notif['FechaCreacion']) ?></small>
-                                                </div>
-                                                <small class="d-block text-truncate" style="max-width: 250px;"><?= htmlspecialchars($notif['Mensaje']) ?></small>
-                                            </a>
-                                        </li>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-notifications">
+                                <li><h6 class="dropdown-header">Notificaciones</h6></li>
+                                <li><a class="dropdown-item" href="#">Pago pendiente para la junta #123</a></li>
+                                <li><a class="dropdown-item" href="#">Nuevo mensaje del coordinador</a></li>
+                                <li><a class="dropdown-item" href="#">Recordatorio: Desembolso mañana</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-center" href="notificaciones.php">Ver todas las notificaciones</a></li>
+                                <li><a class="dropdown-item text-center" href="notificaciones.php">Ver todas</a></li>
                             </ul>
                         </li>
                     <?php endif; ?>
