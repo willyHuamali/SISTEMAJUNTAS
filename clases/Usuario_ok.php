@@ -7,19 +7,18 @@ class Usuario {
         $this->conn = $db;
     }
 
-    // Método para autenticar usuarios (versión actualizada)
+    // Método para autenticar usuarios
     public function login($nombreUsuario, $contrasena) {
-        $query = "SELECT u.*, r.NombreRol 
-                  FROM {$this->table} u
-                  JOIN Roles r ON u.RolID = r.RolID
-                  WHERE u.NombreUsuario = :nombreUsuario AND u.Activo = 1 LIMIT 1";
+        $query = "SELECT UsuarioID, Nombre, Apellido, NombreUsuario, ContrasenaHash, Salt, RolID 
+                  FROM {$this->table} 
+                  WHERE NombreUsuario = :nombreUsuario AND Activo = 1 LIMIT 1";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':nombreUsuario', $nombreUsuario);
         $stmt->execute();
 
         if ($stmt->rowCount() == 1) {
-            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+            $usuario = $stmt->fetch();
             
             // Verificar contraseña
             if ($this->verificarContrasena($contrasena, $usuario['Salt'], $usuario['ContrasenaHash'])) {
@@ -31,12 +30,11 @@ class Usuario {
         return false;
     }
 
-    // Método para obtener un usuario por su ID (versión actualizada)
+    // Método para obtener un usuario por su ID
     public function obtenerPorId($usuarioID) {
-        $query = "SELECT u.*, r.NombreRol, u.PuntosCredito 
-                  FROM {$this->table} u
-                  JOIN Roles r ON u.RolID = r.RolID
-                  WHERE u.UsuarioID = :usuarioID LIMIT 1";
+        $query = "SELECT UsuarioID, Nombre, Apellido, NombreUsuario, Email, DNI, RolID 
+                  FROM {$this->table} 
+                  WHERE UsuarioID = :usuarioID LIMIT 1";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':usuarioID', $usuarioID);
@@ -49,13 +47,13 @@ class Usuario {
         return false;
     }
 
-    // Método para verificar contraseña (sin cambios)
+    // Método para verificar contraseña
     private function verificarContrasena($contrasena, $salt, $hashAlmacenado) {
         $hashCalculado = hash_pbkdf2("sha256", $contrasena, $salt, 10000, 32, true);
         return hash_equals($hashAlmacenado, $hashCalculado);
     }
 
-    // Método para actualizar último login (sin cambios)
+    // Método para actualizar último login
     private function actualizarUltimoLogin($usuarioID) {
         $query = "UPDATE {$this->table} SET UltimoLogin = NOW() WHERE UsuarioID = :usuarioID";
         $stmt = $this->conn->prepare($query);
@@ -63,7 +61,7 @@ class Usuario {
         $stmt->execute();
     }
 
-    // Método para verificar si usuario existe (sin cambios)
+    // Método para verificar si usuario existe (para registro)
     public function existeUsuario($nombreUsuario, $email, $dni) {
         $query = "SELECT UsuarioID FROM {$this->table} 
                   WHERE NombreUsuario = :nombreUsuario OR Email = :email OR DNI = :dni 
@@ -78,7 +76,7 @@ class Usuario {
         return $stmt->rowCount() > 0;
     }
 
-    // Método para registrar nuevos usuarios (sin cambios)
+    // Método para registrar nuevos usuarios
     public function registrar($datos) {
         // Validar datos
         if (empty($datos['nombre']) || empty($datos['apellido']) || empty($datos['dni']) || 
@@ -126,9 +124,7 @@ class Usuario {
             throw new Exception("Error al registrar el usuario.");
         }
     }
-
-    // Resto de los métodos (sin cambios)
-    public function obtenerCuentasBancarias($usuarioId) {
+        public function obtenerCuentasBancarias($usuarioId) {
         $query = "SELECT * FROM CuentasBancarias WHERE UsuarioID = ? ORDER BY EsPrincipal DESC, FechaRegistro DESC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$usuarioId]);

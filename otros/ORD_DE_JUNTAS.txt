@@ -1,0 +1,145 @@
+# Orden de Desarrollo para el Sistema de Juntas
+
+Basado en la estructura actual y la base de datos proporcionada, recomiendo el siguiente
+orden de desarrollo para implementar la funcionalidad completa del sistema:
+
+## 1. Módulo de Perfil de Usuario
+- **Archivos a crear/modificar**:
+  - `perfil.php` (vista principal)
+  - `editar_perfil.php` (formulario de edición)
+  - `cambiar_password.php` (cambio de contraseña)
+  
+**Funcionalidades**:
+- Visualización y edición de datos personales
+- Cambio de contraseña
+- Visualización de puntos de crédito
+- Historial básico de actividades
+
+## 2. Módulo de Gestión de Juntas
+- **Archivos a crear/modificar**:
+  - `juntas/` (directorio)
+    - `crear.php` (formulario de creación)
+    - `listar.php` (listado de juntas)
+    - `detalle.php` (vista detallada)
+    - `editar.php` (edición de juntas)
+    - `cerrar.php` (cierre de juntas)
+  
+**Funcionalidades**:
+- Creación de nuevas juntas con parámetros configurables
+- Listado y filtrado de juntas
+- Vista detallada con participantes y estado
+- Edición de parámetros (antes del inicio)
+- Cierre de juntas completadas
+
+## 3. Módulo de Participantes
+- **Archivos a crear/modificar**:
+  - `participantes/` (directorio)
+    - `agregar.php` (añadir participantes)
+    - `listar.php` (listado por junta)
+    - `retirar.php` (retirar participantes)
+  
+**Funcionalidades**:
+- Agregar participantes a juntas existentes
+- Listado de participantes por junta
+- Retiro de participantes (con justificación)
+- Asignación de orden de recepción
+
+## 4. Módulo de Pagos
+- **Archivos a crear/modificar**:
+  - `pagos/` (directorio)
+    - `registrar.php` (registro de pagos)
+    - `historial.php` (historial por junta/usuario)
+    - `reportes.php` (reportes de pagos)
+  
+**Funcionalidades**:
+- Registro de pagos con comprobante
+- Historial de pagos con filtros
+- Estados de pagos (pendiente, pagado, atrasado)
+- Cálculo automático de comisiones/penalidades
+- Generación de reportes
+
+## 5. Módulo de Desembolsos
+- **Archivos a crear/modificar**:
+  - `desembolsos/` (directorio)
+    - `realizar.php` (registro de desembolsos)
+    - `historial.php` (historial por junta)
+    - `aprobar.php` (aprobación para coordinadores)
+  
+**Funcionalidades**:
+- Registro de desembolsos a participantes
+- Historial de desembolsos
+- Proceso de aprobación (si es necesario)
+- Generación de comprobantes
+
+## 6. Módulo de Garantías
+- **Archivos a crear/modificar**:
+  - `garantias/` (directorio)
+    - `registrar.php` (registro de garantías)
+    - `gestionar.php` (gestión de estados)
+    - `listar.php` (listado por usuario/junta)
+  
+**Funcionalidades**:
+- Registro de garantías con documentos
+- Cambio de estados (activa, liberada, retenida)
+- Listado y búsqueda de garantías
+- Relación con juntas y participantes
+
+## 7. Módulo de Notificaciones
+- **Archivos a crear/modificar**:
+  - `notificaciones.php` (listado y gestión)
+  - `includes/notificaciones.php` (lógica de envío)
+  
+**Funcionalidades**:
+- Listado de notificaciones por usuario
+- Marcado como leídas
+- Notificaciones automáticas (pagos, desembolsos, etc.)
+- Sistema de alertas
+
+## 8. Módulo de Reportes
+- **Archivos a crear/modificar**:
+  - `reportes/` (directorio)
+    - `generar.php` (interfaz de generación)
+    - `personalizados.php` (para administradores)
+    - `exportar.php` (exportación a formatos)
+  
+**Funcionalidades**:
+- Reportes predefinidos (pagos, juntas, participantes)
+- Exportación a PDF, Excel, CSV
+- Filtros avanzados
+- Reportes personalizados (para administradores)
+
+## 9. Módulo de Administración
+- **Archivos a crear/modificar**:
+  - `admin/` (directorio)
+    - `usuarios.php` (gestión de usuarios)
+    - `roles.php` (gestión de roles)
+    - `configuraciones.php` (ajustes del sistema)
+    - `auditoria.php` (registros de auditoría)
+  
+**Funcionalidades**:
+- CRUD completo de usuarios
+- Gestión de roles y permisos
+- Configuración del sistema
+- Visualización de logs y auditoría
+
+## 10. Mejoras de Seguridad y Auditoría
+- **Archivos a modificar**:
+  - `includes/auth.php` (mejoras de autenticación)
+  - `includes/functions.php` (funciones de seguridad)
+  - `clases/Usuario.php` (registro de actividades)
+  
+**Funcionalidades**:
+- Registro detallado de actividades
+- Validación de sesiones
+- Protección contra CSRF y XSS
+- Encriptación mejorada
+
+## Secuencia Recomendada de Implementación
+
+1. **Fase 1 (Core)**: Perfil de Usuario + Gestión de Juntas (2-3 semanas)
+2. **Fase 2 (Operaciones)**: Participantes + Pagos + Desembolsos (3-4 semanas)
+3. **Fase 3 (Seguridad)**: Garantías + Notificaciones (2 semanas)
+4. **Fase 4 (Gestión)**: Reportes + Administración (2 semanas)
+5. **Fase 5 (Optimización)**: Seguridad y Auditoría (1 semana)
+
+Este orden permite construir primero las funcionalidades esenciales para que los usuarios puedan comenzar a operar, mientras se desarrollan paralelamente los módulos administrativos y de reporting.

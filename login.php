@@ -34,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['nombre_usuario'] = $usuarioData['NombreUsuario'];
             $_SESSION['nombre_completo'] = $usuarioData['Nombre'] . ' ' . $usuarioData['Apellido'];
             $_SESSION['rol_id'] = $usuarioData['RolID'];
+            $_SESSION['nombre_rol'] = $usuarioData['NombreRol'];
             $_SESSION['ultimo_actividad'] = time();
             
             // Redirigir al dashboard
