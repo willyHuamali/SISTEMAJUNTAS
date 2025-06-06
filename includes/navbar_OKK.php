@@ -202,8 +202,8 @@ if ($usuarioLogueado && tienePermiso('notifications.view', $rolUsuario)) {
                                 <li><a class="dropdown-item" href="garantias.php"><i class="fas fa-file-contract me-2"></i>Mis Garantías</a></li>
                             <?php endif; ?>
                             
-                            <?php if(tienePermiso('accounts.view', $rolUsuario)): ?>
-                                <li><a class="dropdown-item" href="cuentas/"><i class="fas fa-piggy-bank me-2"></i>Mis Cuentas</a></li>
+                            <?php if(tienePermiso('account.manage', $rolUsuario)): ?>
+                                <li><a class="dropdown-item" href="cuentas_bancarias.php"><i class="fas fa-piggy-bank me-2"></i>Mis Cuentas</a></li>
                             <?php endif; ?>
                             
                             <li><hr class="dropdown-divider"></li>

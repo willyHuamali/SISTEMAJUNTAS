@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/config.php';
-require_once __DIR__ . '/clases/Database.php';
+require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/clases/Usuario.php';
 
 // Redirigir si ya está logueado

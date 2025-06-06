@@ -7,6 +7,14 @@
 │   │   └── scripts.js
 │   └── img/
 │
+├── cuentas/
+│   ├── index.php          # Listado de cuentas del usuario
+│   ├── agregar.php        # Formulario para agregar nueva cuenta
+│   ├── editar.php         # Formulario para editar cuenta existente
+│   ├── eliminar.php       # Proceso para eliminar cuenta
+│   ├── gestionar.php      # Vista de administrador para gestionar todas las cuentas
+│   └── procesar.php       # Procesamiento de formularios (agregar/editar)
+│
 ├── includes/
 │   ├── config.php
 │   ├── auth.php

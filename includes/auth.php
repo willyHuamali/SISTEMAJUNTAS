@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../clases/Usuario.php';  // Corregido para apuntar a la carpeta correcta
-require_once __DIR__ . '/../clases/Database.php';
+require_once __DIR__ . '/../includes/db.php';
 
 
 $database = new Database();

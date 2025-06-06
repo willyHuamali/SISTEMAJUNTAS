@@ -185,22 +185,3 @@ function time_elapsed_string($datetime, $full = false) {
     return $string ? implode(', ', $string) . ' atrás' : 'justo ahora';
 }
 
-/**
- * Muestra mensajes flash de la sesión (versión mejorada)
- */
-function mostrarMensajes() {
-    if (isset($_SESSION['error'])) {
-        echo '<div class="alert alert-danger">'.$_SESSION['error'].'</div>';
-        unset($_SESSION['error']);
-    }
-    
-    if (isset($_SESSION['success'])) {
-        echo '<div class="alert alert-success">'.$_SESSION['success'].'</div>';
-        unset($_SESSION['success']);
-    }
-    
-    $mensajeFlash = mostrarMensajeFlash();
-    if ($mensajeFlash) {
-        echo '<div class="alert alert-'.$mensajeFlash['type'].'">'.$mensajeFlash['text'].'</div>';
-    }
-}

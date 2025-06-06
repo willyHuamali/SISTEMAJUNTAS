@@ -1,5 +1,5 @@
 
-sql
+--base de datos mysqlserver 
 -- Creación de la base de datos
 CREATE DATABASE IF NOT EXISTS SistemaJuntas;
 

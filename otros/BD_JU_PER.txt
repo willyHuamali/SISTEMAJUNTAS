@@ -156,3 +156,41 @@ SELECT r.RolID, p.PermisoID
 FROM Roles r, Permisos p
 WHERE r.NombreRol = 'Auditor' AND p.Codigo = 'notifications.view';
 
+--06-06-2025 CUENTAS BANCARIAS
+
+-- Agregar nuevos permisos para cuentas bancarias
+INSERT INTO Permisos (NombrePermiso, Descripcion, Codigo) VALUES
+('Gestionar Cuentas Bancarias', 'Crear, editar y eliminar cuentas bancarias propias', 'accounts.manage'),
+('Ver Cuentas Bancarias', 'Ver información de cuentas bancarias', 'accounts.view'),
+('Gestionar Todas las Cuentas', 'Administrar cuentas bancarias de todos los usuarios', 'accounts.manage_all');
+
+-- Asignar permisos al Administrador (todos los permisos de cuentas)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Administrador' AND p.Codigo IN ('accounts.manage', 'accounts.view', 'accounts.manage_all');
+
+-- Asignar permisos al Coordinador (puede ver todas las cuentas)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Coordinador' AND p.Codigo IN ('accounts.view', 'accounts.manage_all');
+
+-- Asignar permisos al Participante (solo gestionar sus propias cuentas)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Participante' AND p.Codigo IN ('accounts.manage', 'accounts.view');
+
+-- Asignar permisos al Cobrador (puede ver cuentas)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Cobrador' AND p.Codigo = 'accounts.view';
+
+-- Asignar permisos al Auditor (puede ver cuentas)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Auditor' AND p.Codigo = 'accounts.view';
+
