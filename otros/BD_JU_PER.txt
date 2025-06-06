@@ -194,3 +194,22 @@ SELECT r.RolID, p.PermisoID
 FROM Roles r, Permisos p
 WHERE r.NombreRol = 'Auditor' AND p.Codigo = 'accounts.view';
 
+-- PERMISOS ACTUALIZADOS
+-- Actualizar descripción y código si el permiso existe pero con diferente código
+UPDATE Permisos 
+SET Descripcion = 'Permite ver el listado de juntas', 
+    Codigo = 'juntas.view'
+WHERE NombrePermiso = 'Ver Juntas' AND Codigo != 'juntas.view';
+
+-- Luego insertar solo los que faltan
+INSERT INTO Permisos (NombrePermiso, Descripcion, Codigo)
+SELECT * FROM (
+    SELECT 'Crear Juntas' AS NombrePermiso, 'Permite crear nuevas juntas' AS Descripcion, 'juntas.create' AS Codigo
+    UNION SELECT 'Editar Juntas', 'Permite editar juntas existentes', 'juntas.edit'
+    UNION SELECT 'Gestionar Todas las Juntas', 'Permite gestionar juntas de otros usuarios', 'juntas.manage_all'
+    UNION SELECT 'Ver Mis Juntas', 'Permite ver las juntas propias', 'juntas.view_own'
+) AS nuevos_permisos
+WHERE NOT EXISTS (
+    SELECT 1 FROM Permisos WHERE Codigo = nuevos_permisos.Codigo
+);
+

@@ -4,10 +4,6 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/clases/Usuario.php';
 require_once __DIR__ . '/includes/db.php';
-require_once __DIR__ . '/clases/AuthHelper.php';
-
-// Añade esto al inicio del archivo para usar la clase AuthHelper
-use Clases\AuthHelper;
 
 verificarAutenticacion();
 verificarInactividad();
@@ -15,13 +11,12 @@ verificarInactividad();
 // Mostrar mensaje de éxito si existe
 if (isset($_SESSION['mensaje_exito'])) {
     $mensaje_exito = $_SESSION['mensaje_exito'];
-    unset($_SESSION['mensaje_exito']);
+    unset($_SESSION['mensaje_exito']); // Limpiar el mensaje después de mostrarlo
 }
 
 $database = new Database();
 $db = $database->getConnection();
 $usuario = new Usuario($db);
-$authHelper = new AuthHelper($db); // Crear instancia de AuthHelper
 
 // Obtener datos del usuario
 $datosUsuario = $usuario->obtenerPorId($_SESSION['usuario_id']);
@@ -29,23 +24,21 @@ $rolUsuario = $_SESSION['rol_id'] ?? null;
 
 // Obtener cuentas bancarias del usuario
 $cuentasBancarias = [];
-if ($authHelper->tienePermiso('account.view', $rolUsuario)) { // Usar el método de AuthHelper
+if (tienePermiso('account.view', $rolUsuario)) {
     $cuentasBancarias = $usuario->obtenerCuentasBancarias($_SESSION['usuario_id']);
 }
 
 // Obtener garantías del usuario
 $garantias = [];
-if ($authHelper->tienePermiso('guarantees.view', $rolUsuario)) { // Usar el método de AuthHelper
+if (tienePermiso('guarantees.view', $rolUsuario)) {
     $garantias = $usuario->obtenerGarantias($_SESSION['usuario_id']);
 }
 
 // Obtener actividad reciente
 $actividadReciente = [];
-if ($authHelper->tienePermiso('activity.view', $rolUsuario)) { // Usar el método de AuthHelper
+if (tienePermiso('activity.view', $rolUsuario)) {
     $actividadReciente = $usuario->obtenerActividadReciente($_SESSION['usuario_id'], 5);
 }
-
-// Resto del código...
 
 require_once 'includes/header.php';
 require_once 'includes/navbar.php';

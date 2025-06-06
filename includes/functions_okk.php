@@ -1,32 +1,64 @@
 <?php
-// Eliminar la función tienePermiso() ya que ahora está en AuthHelper
-
-// Las demás funciones pueden permanecer igual, pero podemos mejorar algunas:
+// functions.php - Funciones auxiliares para el sistema
 
 /**
- * Obtiene el nombre completo del usuario con validación
+ * Verifica si un rol tiene un permiso específico
+ * 
+ * @param string $codigoPermiso Código del permiso a verificar
+ * @param int|null $rolID ID del rol del usuario (si es null, retorna false)
+ * @return bool True si tiene permiso, False si no
  */
-function obtenerNombreCompleto(array $datosUsuario): string {
-    $nombre = $datosUsuario['Nombre'] ?? '';
-    $apellido = $datosUsuario['Apellido'] ?? '';
-    return htmlspecialchars(trim("$nombre $apellido"), ENT_QUOTES, 'UTF-8');
+function tienePermiso($codigoPermiso, $rolID) {
+    global $db; // Asumimos que $db está disponible globalmente
+    
+    if (!$rolID) return false;
+    
+    try {
+        $query = "SELECT COUNT(*) as tiene 
+                  FROM Roles_Permisos rp
+                  JOIN Permisos p ON rp.PermisoID = p.PermisoID
+                  WHERE rp.RolID = :rolID AND p.Codigo = :codigo";
+        
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':rolID', $rolID, PDO::PARAM_INT);
+        $stmt->bindParam(':codigo', $codigoPermiso);
+        $stmt->execute();
+        
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado['tiene'] > 0;
+    } catch (PDOException $e) {
+        error_log("Error al verificar permiso: " . $e->getMessage());
+        return false;
+    }
 }
 
 /**
- * Formatea una cantidad monetaria con validación
+ * Obtiene el nombre completo del usuario
+ * 
+ * @param array $datosUsuario Array con datos del usuario (debe contener 'Nombre' y 'Apellido')
+ * @return string Nombre completo formateado
  */
-function formatearMoneda(float $monto, string $moneda = 'PEN'): string {
+function obtenerNombreCompleto($datosUsuario) {
+    return htmlspecialchars(trim($datosUsuario['Nombre'] . ' ' . $datosUsuario['Apellido']));
+}
+
+/**
+ * Formatea una cantidad monetaria
+ * 
+ * @param float $monto Cantidad a formatear
+ * @param string $moneda Código de moneda (default: 'PEN')
+ * @return string Monto formateado con símbolo de moneda
+ */
+function formatearMoneda($monto, $moneda = 'PEN') {
     $simbolos = [
         'PEN' => 'S/ ',
         'USD' => '$',
         'EUR' => '€'
     ];
     
-    $simbolo = $simbolos[strtoupper($moneda)] ?? '';
-    return $simbolo . number_format($monto, 2, '.', ',');
+    $simbolo = $simbolos[$moneda] ?? '';
+    return $simbolo . number_format($monto, 2);
 }
-
-// Las demás funciones pueden permanecer igual...
 
 /**
  * Verifica si una fecha es válida

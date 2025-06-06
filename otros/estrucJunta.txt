@@ -28,6 +28,7 @@
 │   ├── Usuario.php
 │   ├── Database.php
 │   └── Junta.php
+│   └── AuthHelper.php
 │
 ├── index.php
 ├── login.php
