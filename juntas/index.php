@@ -4,19 +4,23 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../clases/Junta.php';
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../clases/AuthHelper.php';
 
 verificarAutenticacion();
 verificarInactividad();
 
+// Inicializar Database y AuthHelper
+$database = new Database();
+$db = $database->getConnection();
+$authHelper = new \Clases\AuthHelper($db);
+
 // Verificar permisos
-if (!tienePermiso('juntas.view', $_SESSION['rol_id'])) {
+if (!$authHelper->tienePermiso('juntas.view', $_SESSION['rol_id'])) {
     $_SESSION['error'] = 'No tienes permiso para acceder a esta sección';
     header('Location: ../index.php');
     exit;
 }
 
-$database = new Database();
-$db = $database->getConnection();
 $junta = new Junta($db);
 
 // Obtener parámetros de búsqueda/filtro
@@ -26,7 +30,7 @@ $pagina = isset($_GET['pagina']) && is_numeric($_GET['pagina']) ? (int)$_GET['pa
 $registrosPorPagina = 10;
 
 // Obtener juntas según permisos
-if (tienePermiso('juntas.manage_all', $_SESSION['rol_id'])) {
+if ($authHelper->tienePermiso('juntas.manage_all', $_SESSION['rol_id'])) {
     // Administrador ve todas las juntas
     $juntas = $junta->obtenerTodasLasJuntas($busqueda, $estado, $pagina, $registrosPorPagina);
     $totalJuntas = $junta->contarTodasLasJuntas($busqueda, $estado);
@@ -55,7 +59,7 @@ require_once '../includes/navbar.php';
             <h2><i class="fas fa-users me-2"></i>Listado de Juntas</h2>
         </div>
         <div class="col-md-4 text-end">
-            <?php if (tienePermiso('juntas.create', $_SESSION['rol_id'])): ?>
+            <?php if ($authHelper->tienePermiso('juntas.create', $_SESSION['rol_id'])): ?>
                 <a href="crear_junta.php" class="btn btn-primary">
                     <i class="fas fa-plus-circle me-1"></i> Nueva Junta
                 </a>
@@ -146,12 +150,12 @@ require_once '../includes/navbar.php';
                                             <a href="ver_junta.php?id=<?= $jun['JuntaID'] ?>" class="btn btn-sm btn-outline-primary me-1" title="Ver detalles">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <?php if (tienePermiso('juntas.edit', $_SESSION['rol_id']) && $jun['Estado'] != 'Completada' && $jun['Estado'] != 'Cancelada'): ?>
+                                            <?php if ($authHelper->tienePermiso('juntas.edit', $_SESSION['rol_id']) && $jun['Estado'] != 'Completada' && $jun['Estado'] != 'Cancelada'): ?>
                                                 <a href="editar_junta.php?id=<?= $jun['JuntaID'] ?>" class="btn btn-sm btn-outline-secondary me-1" title="Editar">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                             <?php endif; ?>
-                                            <?php if (tienePermiso('juntas.manage_all', $_SESSION['rol_id']) && $jun['Estado'] == 'Activa'): ?>
+                                            <?php if ($authHelper->tienePermiso('juntas.manage_all', $_SESSION['rol_id']) && $jun['Estado'] == 'Activa'): ?>
                                                 <form action="procesar_estado.php" method="post" class="d-inline">
                                                     <input type="hidden" name="id" value="<?= $jun['JuntaID'] ?>">
                                                     <input type="hidden" name="accion" value="cancelar">
