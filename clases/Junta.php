@@ -9,18 +9,17 @@ class Junta {
 
     // Obtener juntas recientes
     public function obtenerJuntasRecientes($limite = 6) {
-        $query = "SELECT j.*, u.Nombre as CreadorNombre, u.Apellido as CreadorApellido 
-                  FROM {$this->table} j
-                  JOIN Usuarios u ON j.CreadaPor = u.UsuarioID
-                  WHERE j.Estado = 'Activa'
-                  ORDER BY j.FechaCreacion DESC
-                  LIMIT :limite";
-        
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindValue(':limite', (int)$limite, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        return $stmt->fetchAll();
+        try {
+            $query = "SELECT * FROM Juntas ORDER BY FechaCreacion DESC LIMIT :limite";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindValue(':limite', (int)$limite, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch(PDOException $e) {
+            error_log("Error en obtenerJuntasRecientes: " . $e->getMessage());
+            return []; // Retorna array vacío en caso de error
+        }
     }
 
     // Obtener detalles de una junta específica

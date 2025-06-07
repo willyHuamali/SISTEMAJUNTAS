@@ -38,7 +38,7 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm py-1">
     <div class="container py-1">
-        <a class="navbar-brand" href="index.php">
+        <a class="navbar-brand" href="<?php echo url('index.php'); ?>">
             <i class="fas fa-users me-2"></i>Sistema de Juntas
         </a>
         
@@ -49,7 +49,7 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link <?= basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : '' ?>" href="index.php">
+                    <a class="nav-link <?= basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : '' ?>" href="<?php echo url('dashboard.php'); ?>">
                         <i class="fas fa-home"></i> Inicio
                     </a>
                 </li>
@@ -63,18 +63,18 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
                         </a>
                         <ul class="dropdown-menu">
                             <?php if($authHelper->tienePermiso('juntas.view', $rolUsuario)): ?>
-                                <li><a class="dropdown-item" href="juntas/"><i class="fas fa-list me-2"></i>Todas las Juntas</a></li>
+                                <li><a class="dropdown-item" href="<?php echo url('juntas/index.php'); ?>"><i class="fas fa-list me-2"></i>Todas las Juntas</a></li>
                             <?php endif; ?>
                             
                             <?php if($authHelper->tienePermiso('juntas.create', $rolUsuario)): ?>
-                                <li><a class="dropdown-item" href="juntas/crear_junta.php"><i class="fas fa-plus-circle me-2"></i>Crear Nueva Junta</a></li>
+                                <li><a class="dropdown-item" href="<?php echo url('juntas/crear_junta.php'); ?>"><i class="fas fa-plus-circle me-2"></i>Crear Nueva Junta</a></li>
                             <?php endif; ?>
                             
-                            <li><a class="dropdown-item" href="juntas/misjuntas.php"><i class="fas fa-user-friends me-2"></i>Mis Juntas</a></li>
+                            <li><a class="dropdown-item" href="<?php echo url('juntas/misjuntas.php'); ?>"><i class="fas fa-user-friends me-2"></i>Mis Juntas</a></li>
                             
                             <?php if($authHelper->tienePermiso('juntas.edit', $rolUsuario)): ?>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="juntas/gestionar.php"><i class="fas fa-cog me-2"></i>Gestionar Juntas</a></li>
+                                <li><a class="dropdown-item" href="<?php echo url('juntas/gestionar.php'); ?>"><i class="fas fa-cog me-2"></i>Gestionar Juntas</a></li>
                             <?php endif; ?>
                         </ul>
                     </li>
@@ -88,16 +88,16 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
                             </a>
                             <ul class="dropdown-menu">
                                 <?php if($authHelper->tienePermiso('payments.view', $rolUsuario)): ?>
-                                    <li><a class="dropdown-item" href="pagos.php"><i class="fas fa-list me-2"></i>Historial de Pagos</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo url('pagos/pagos.php'); ?>" ><i class="fas fa-list me-2"></i>Historial de Pagos</a></li>
                                 <?php endif; ?>
                                 
                                 <?php if($authHelper->tienePermiso('payments.register', $rolUsuario)): ?>
-                                    <li><a class="dropdown-item" href="registrar_pago.php"><i class="fas fa-plus-circle me-2"></i>Registrar Pago</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo url('pagos/registrar_pagos.php'); ?>"><i class="fas fa-plus-circle me-2"></i>Registrar Pago</a></li>
                                 <?php endif; ?>
                                 
                                 <?php if($authHelper->tienePermiso('payments.reports', $rolUsuario)): ?>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="reportes_pagos.php"><i class="fas fa-chart-bar me-2"></i>Reportes de Pagos</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo url('pagos/reportes_pagos.php'); ?>"><i class="fas fa-chart-bar me-2"></i>Reportes de Pagos</a></li>
                                 <?php endif; ?>
                             </ul>
                         </li>
@@ -112,11 +112,11 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
                             </a>
                             <ul class="dropdown-menu">
                                 <?php if($authHelper->tienePermiso('disbursements.view', $rolUsuario)): ?>
-                                    <li><a class="dropdown-item" href="desembolsos.php"><i class="fas fa-list me-2"></i>Historial</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo url('desembolsos/desembolsos.php'); ?>"><i class="fas fa-list me-2"></i>Historial</a></li>
                                 <?php endif; ?>
                                 
                                 <?php if($authHelper->tienePermiso('disbursements.create', $rolUsuario)): ?>
-                                    <li><a class="dropdown-item" href="nuevo_desembolso.php"><i class="fas fa-plus-circle me-2"></i>Nuevo Desembolso</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo url('desembolsos/nuevo_desembolsos.php'); ?>"><i class="fas fa-plus-circle me-2"></i>Nuevo Desembolso</a></li>
                                 <?php endif; ?>
                             </ul>
                         </li>
@@ -131,24 +131,24 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
                             </a>
                             <ul class="dropdown-menu">
                                 <?php if($authHelper->tienePermiso('users.manage', $rolUsuario)): ?>
-                                    <li><a class="dropdown-item" href="admin/usuarios.php"><i class="fas fa-users-cog me-2"></i>Usuarios</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo url('admin/usuarios.php'); ?>"><i class="fas fa-users-cog me-2"></i>Usuarios</a></li>
                                 <?php endif; ?>
                                 
                                 <?php if($authHelper->tienePermiso('roles.manage', $rolUsuario)): ?>
-                                    <li><a class="dropdown-item" href="admin/roles.php"><i class="fas fa-user-tag me-2"></i>Roles</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo url('admin/roles.php'); ?>"><i class="fas fa-user-tag me-2"></i>Roles</a></li>
                                 <?php endif; ?>
                                 
                                 <?php if($authHelper->tienePermiso('settings.manage', $rolUsuario)): ?>
-                                    <li><a class="dropdown-item" href="admin/configuracion.php"><i class="fas fa-sliders-h me-2"></i>Configuración</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo url('admin/configuracion.php'); ?>"><i class="fas fa-sliders-h me-2"></i>Configuración</a></li>
                                 <?php endif; ?>
                                 
                                 <?php if($authHelper->tienePermiso('audit.view', $rolUsuario)): ?>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="admin/auditoria.php"><i class="fas fa-clipboard-list me-2"></i>Auditoría</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo url('admin/auditoria.php'); ?>"><i class="fas fa-clipboard-list me-2"></i>Auditoría</a></li>
                                 <?php endif; ?>
                                 
                                 <?php if($authHelper->tienePermiso('reports.generate', $rolUsuario)): ?>
-                                    <li><a class="dropdown-item" href="admin/reportes.php"><i class="fas fa-chart-pie me-2"></i>Reportes</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo url('admin/reportes.php'); ?>"><i class="fas fa-chart-pie me-2"></i>Reportes</a></li>
                                 <?php endif; ?>
                             </ul>
                         </li>
@@ -188,7 +188,7 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-center" href="notificaciones.php">Ver todas las notificaciones</a></li>
+                                <li><a class="dropdown-item text-center" href="<?php echo url('notificaciones.php'); ?>">Ver todas las notificaciones</a></li>
                             </ul>
                         </li>
                     <?php endif; ?>
@@ -199,28 +199,28 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
                             <i class="fas fa-user-circle me-1"></i> <?= htmlspecialchars($nombreUsuario) ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="perfil.php"><i class="fas fa-user me-2"></i>Mi Perfil</a></li>
+                            <li><a class="dropdown-item" href="<?php echo url('perfil.php'); ?>"><i class="fas fa-user me-2"></i>Mi Perfil</a></li>
                             
                             <?php if($authHelper->tienePermiso('guarantees.view', $rolUsuario)): ?>
-                                <li><a class="dropdown-item" href="garantias.php"><i class="fas fa-file-contract me-2"></i>Mis Garantías</a></li>
+                                <li><a class="dropdown-item" href="<?php echo url('garantias.php'); ?>"><i class="fas fa-file-contract me-2"></i>Mis Garantías</a></li>
                             <?php endif; ?>
                             
                             <?php if($authHelper->tienePermiso('accounts.view', $rolUsuario)): ?>
-                                <li><a class="dropdown-item" href="cuentas/"><i class="fas fa-piggy-bank me-2"></i>Mis Cuentas</a></li>
+                                <li><a class="dropdown-item" href="<?php echo url('cuentas/'); ?>"><i class="fas fa-piggy-bank me-2"></i>Mis Cuentas</a></li>
                             <?php endif; ?>
                             
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</a></li>
+                            <li><a class="dropdown-item" href="<?php echo url('logout.php'); ?>"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</a></li>
                         </ul>
                     </li>
                 <?php else: ?>
                     <li class="nav-item">
-                        <a class="nav-link <?= basename($_SERVER['PHP_SELF']) == 'login.php' ? 'active' : '' ?>" href="login.php">
+                        <a class="nav-link <?= basename($_SERVER['PHP_SELF']) == 'login.php' ? 'active' : '' ?>" href="<?php echo url('login.php'); ?>">
                             <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?= basename($_SERVER['PHP_SELF']) == 'registro.php' ? 'active' : '' ?>" href="registro.php">
+                        <a class="nav-link <?= basename($_SERVER['PHP_SELF']) == 'registro.php' ? 'active' : '' ?>" href="<?php echo url('registro.php'); ?>">
                             <i class="fas fa-user-plus"></i> Registrarse
                         </a>
                     </li>

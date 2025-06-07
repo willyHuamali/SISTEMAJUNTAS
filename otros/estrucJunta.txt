@@ -26,9 +26,15 @@
 │
 ├── clases/
 │   ├── Usuario.php
-│   ├── Database.php
 │   └── Junta.php
 │   └── AuthHelper.php
+├── junta/
+│   ├── index.php
+│   ├── crear_junta.php
+│   └── editar_junta.php
+│   └── eliminar_junta.php
+│   ├── gestionar_junta.php      # Vista de administrador para gestionar todas las cuentas
+│   └── procesar_junta.php 
 │
 ├── index.php
 ├── login.php

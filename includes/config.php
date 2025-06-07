@@ -1,6 +1,13 @@
 <?php
-// Configuración básica para el sistema
-session_start();
+// Mostrar todos los errores
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+
+// Iniciar sesión si no está activa
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Configuración de la base de datos
 define('DB_HOST', 'localhost');
@@ -13,6 +20,7 @@ define('DB_CHARSET', 'utf8mb4');
 define('APP_NAME', 'Sistema de Juntas');
 define('BASE_URL', 'http://localhost/sistemajuntas/');
 
-// Mostrar errores (solo en desarrollo)
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// Función para assets
+function asset($path) {
+    return BASE_URL . 'assets/' . ltrim($path, '/');
+}

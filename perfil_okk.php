@@ -6,6 +6,7 @@ require_once __DIR__ . '/clases/Usuario.php';
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/clases/AuthHelper.php';
 
+// Añade esto al inicio del archivo para usar la clase AuthHelper
 use Clases\AuthHelper;
 
 verificarAutenticacion();
@@ -20,7 +21,7 @@ if (isset($_SESSION['mensaje_exito'])) {
 $database = new Database();
 $db = $database->getConnection();
 $usuario = new Usuario($db);
-$authHelper = new AuthHelper($db);
+$authHelper = new AuthHelper($db); // Crear instancia de AuthHelper
 
 // Obtener datos del usuario
 $datosUsuario = $usuario->obtenerPorId($_SESSION['usuario_id']);
@@ -28,24 +29,29 @@ $rolUsuario = $_SESSION['rol_id'] ?? null;
 
 // Obtener cuentas bancarias del usuario
 $cuentasBancarias = [];
-if ($authHelper->tienePermiso('account.view', $rolUsuario)) {
+if ($authHelper->tienePermiso('account.view', $rolUsuario)) { // Usar el método de AuthHelper
     $cuentasBancarias = $usuario->obtenerCuentasBancarias($_SESSION['usuario_id']);
 }
 
 // Obtener garantías del usuario
 $garantias = [];
-if ($authHelper->tienePermiso('guarantees.view', $rolUsuario)) {
+if ($authHelper->tienePermiso('guarantees.view', $rolUsuario)) { // Usar el método de AuthHelper
     $garantias = $usuario->obtenerGarantias($_SESSION['usuario_id']);
 }
 
 // Obtener actividad reciente
 $actividadReciente = [];
-if ($authHelper->tienePermiso('activity.view', $rolUsuario)) {
+if ($authHelper->tienePermiso('activity.view', $rolUsuario)) { // Usar el método de AuthHelper
     $actividadReciente = $usuario->obtenerActividadReciente($_SESSION['usuario_id'], 5);
 }
 
+// Resto del código...
+
 require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/includes/navbar.php';
+//require_once 'includes/header.php';
+//require_once 'includes/navbar.php';
+
 ?>
 
 <div class="container mt-4">
@@ -57,7 +63,7 @@ require_once __DIR__ . '/includes/navbar.php';
                     <h5 class="mb-0">Información del Perfil</h5>
                 </div>
                 <div class="card-body text-center">
-                    <img src="<?= asset('img/user-default.png') ?>" class="rounded-circle mb-3" width="120" alt="Avatar">
+                    <img src="assets/img/user-default.png" class="rounded-circle mb-3" width="120" alt="Avatar">
                     <h4><?= htmlspecialchars($datosUsuario['Nombre'] . ' ' . htmlspecialchars($datosUsuario['Apellido'])) ?></h4>
                     <p class="text-muted mb-1">@<?= htmlspecialchars($datosUsuario['NombreUsuario']) ?></p>
                     <p class="text-muted"><?= htmlspecialchars($_SESSION['nombre_rol'] ?? 'Rol no definido') ?></p>
@@ -146,7 +152,7 @@ require_once __DIR__ . '/includes/navbar.php';
                 
                 <!-- Pestaña de Cuentas Bancarias -->
                 <div class="tab-pane fade" id="accounts" role="tabpanel">
-                    <?php if ($authHelper->tienePermiso('account.view', $rolUsuario)): ?>
+                    <?php if (tienePermiso('account.view', $rolUsuario)): ?>
                         <?php if (!empty($cuentasBancarias)): ?>
                             <div class="table-responsive">
                                 <table class="table table-striped">
@@ -179,7 +185,7 @@ require_once __DIR__ . '/includes/navbar.php';
                                     </tbody>
                                 </table>
                             </div>
-                            <?php if ($authHelper->tienePermiso('account.manage', $rolUsuario)): ?>
+                            <?php if (tienePermiso('account.manage', $rolUsuario)): ?>
                                 <div class="text-end">
                                     <a href="agregar_cuenta.php" class="btn btn-primary btn-sm">
                                         <i class="fas fa-plus"></i> Agregar Cuenta
@@ -189,7 +195,7 @@ require_once __DIR__ . '/includes/navbar.php';
                         <?php else: ?>
                             <div class="alert alert-info">
                                 No tienes cuentas bancarias registradas.
-                                <?php if ($authHelper->tienePermiso('account.manage', $rolUsuario)): ?>
+                                <?php if (tienePermiso('account.manage', $rolUsuario)): ?>
                                     <a href="agregar_cuenta.php" class="alert-link">Agrega tu primera cuenta</a>
                                 <?php endif; ?>
                             </div>
@@ -201,7 +207,7 @@ require_once __DIR__ . '/includes/navbar.php';
                 
                 <!-- Pestaña de Garantías -->
                 <div class="tab-pane fade" id="guarantees" role="tabpanel">
-                    <?php if ($authHelper->tienePermiso('guarantees.view', $rolUsuario)): ?>
+                    <?php if (tienePermiso('guarantees.view', $rolUsuario)): ?>
                         <?php if (!empty($garantias)): ?>
                             <div class="row">
                                 <?php foreach ($garantias as $garantia): ?>
@@ -235,7 +241,7 @@ require_once __DIR__ . '/includes/navbar.php';
                         <?php else: ?>
                             <div class="alert alert-info">
                                 No tienes garantías registradas.
-                                <?php if ($authHelper->tienePermiso('guarantees.manage', $rolUsuario)): ?>
+                                <?php if (tienePermiso('guarantees.manage', $rolUsuario)): ?>
                                     <a href="agregar_garantia.php" class="alert-link">Registrar una garantía</a>
                                 <?php endif; ?>
                             </div>
@@ -249,4 +255,4 @@ require_once __DIR__ . '/includes/navbar.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once 'includes/footer.php'; ?>

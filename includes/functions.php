@@ -1,4 +1,22 @@
 <?php
+/**
+ * Genera una URL absoluta
+ */
+if (!function_exists('url')) {
+    function url($path = '') {
+        return BASE_URL . ltrim($path, '/');
+    }
+}
+
+/**
+ * Genera una URL para assets
+ */
+if (!function_exists('asset')) {
+    function asset($path) {
+        return BASE_URL . 'assets/' . ltrim($path, '/');
+    }
+}
+
 // Eliminar la función tienePermiso() ya que ahora está en AuthHelper
 
 // Las demás funciones pueden permanecer igual, pero podemos mejorar algunas:

@@ -1,24 +1,55 @@
 <?php
-require_once __DIR__ . '/includes/config.php';
-require_once __DIR__ . '/includes/db.php';
-require_once __DIR__ . '/clases/Junta.php';
+// Habilitar todos los errores
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-// Verificar si el usuario está logueado
-$usuarioLogueado = isset($_SESSION['usuario_id']);
-
-// Obtener las juntas más recientes
-try {
-    $database = new Database();
-    $db = $database->getConnection();
-    
-    $junta = new Junta($db);
-    $juntasRecientes = $junta->obtenerJuntasRecientes(6);
-} catch(Exception $e) {
-    $error = "Error al cargar las juntas: " . $e->getMessage();
+// Iniciar sesión si no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
-require_once 'includes/header.php';
-require_once 'includes/navbar.php';
+// Definir función url() si no existe
+if (!function_exists('url')) {
+    function url($path) {
+        return $path; // O puedes implementar lógica más compleja si necesitas
+    }
+}
+
+// Verificar si config.php se carga correctamente
+require_once __DIR__ . '/includes/config.php';
+//echo "Config cargado<br>"; // Debug
+
+// Verificar conexión a BD
+require_once __DIR__ . '/includes/db.php';
+$database = new Database();
+try {
+    $db = $database->getConnection();
+   // echo "Conexión a BD exitosa<br>"; // Debug
+} catch(Exception $e) {
+    //die("Error de conexión: " . $e->getMessage());
+}
+
+// Definir $usuarioLogueado antes de incluir navbar
+$usuarioLogueado = isset($_SESSION['usuario_id']);
+
+// Verificar clase Junta
+require_once __DIR__ . '/clases/Junta.php';
+try {
+    $junta = new Junta($db);
+    $juntasRecientes = $junta->obtenerJuntasRecientes(6);
+    //echo "Consulta a Juntas exitosa<br>"; // Debug
+} catch(Exception $e) {
+    $error = "Error al cargar las juntas: " . $e->getMessage();
+    echo $error; // Debug
+}
+
+// Verificar includes
+require_once __DIR__ . '/includes/header.php';
+//echo "Header cargado<br>"; // Debug
+
+require_once __DIR__ . '/includes/navbar.php';
+//echo "Navbar cargado<br>"; // Debug
 ?>
 
 <div class="container py-5 fade-in">
@@ -143,5 +174,5 @@ require_once 'includes/navbar.php';
 </div>
 
 <?php
-require_once 'includes/footer.php';
+require_once __DIR__ . '/includes/footer.php';
 ?>
