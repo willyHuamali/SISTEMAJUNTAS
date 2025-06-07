@@ -213,3 +213,99 @@ WHERE NOT EXISTS (
     SELECT 1 FROM Permisos WHERE Codigo = nuevos_permisos.Codigo
 );
 
+--07 INSER DE NUEVOS PERMISOS DE JUNTAS
+
+SELECT * FROM Permisos 
+WHERE NombrePermiso IN (
+  'Gestionar Todas las Juntas', 
+  'Ver Mis Juntas', 
+  'Administrar Participantes'
+) OR Codigo IN (
+  'juntas.manage_all', 
+  'juntas.view_own', 
+  'juntas.manage_participants'
+);
+
+-- Si el permiso existe pero con diferente código
+UPDATE Permisos SET 
+  Codigo = 'juntas.manage_all'
+WHERE NombrePermiso = 'Gestionar Todas las Juntas' AND Codigo != 'juntas.manage_all';
+
+-- Opción más segura: verificar existencia por código antes de insertar
+INSERT INTO Permisos (NombrePermiso, Descripcion, Codigo)
+SELECT * FROM (
+  SELECT 'Ver Mis Juntas' AS NombrePermiso, 'Permite ver las juntas propias' AS Descripcion, 'juntas.view_own' AS Codigo
+  UNION ALL
+  SELECT 'Administrar Participantes', 'Gestionar participantes en juntas', 'juntas.manage_participants'
+) AS nuevos_permisos
+WHERE NOT EXISTS (
+  SELECT 1 FROM Permisos WHERE Codigo = nuevos_permisos.Codigo
+);
+-- Asignación segura que evita completamente duplicados
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r
+CROSS JOIN Permisos p 
+WHERE r.NombreRol = 'Coordinador'
+AND p.Codigo IN ('juntas.manage_all', 'juntas.manage_participants')
+AND NOT EXISTS (
+  SELECT 1 FROM Roles_Permisos rp 
+  WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- permisos paraa participantes
+-- Agregar nuevos permisos específicos para participantes si no existen
+INSERT INTO Permisos (NombrePermiso, Descripcion, Codigo)
+SELECT * FROM (
+    SELECT 'Gestionar Participantes' AS NombrePermiso, 'Agregar, editar y eliminar participantes en juntas' AS Descripcion, 'participants.manage' AS Codigo
+    UNION SELECT 'Ver Participantes', 'Ver listado de participantes en juntas', 'participants.view'
+    UNION SELECT 'Asignar Orden Participantes', 'Definir el orden de recepción en juntas', 'participants.assign_order'
+) AS nuevos_permisos
+WHERE NOT EXISTS (
+    SELECT 1 FROM Permisos WHERE Codigo = nuevos_permisos.Codigo
+);
+
+-- Asignar permisos a roles existentes
+-- Administrador (todos los permisos)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Administrador' 
+AND p.Codigo IN ('participants.manage', 'participants.view', 'participants.assign_order')
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Coordinador (puede gestionar participantes)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Coordinador' 
+AND p.Codigo IN ('participants.manage', 'participants.view', 'participants.assign_order')
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Cobrador (puede ver participantes)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Cobrador' 
+AND p.Codigo = 'participants.view'
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Auditor (puede ver participantes)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Auditor' 
+AND p.Codigo = 'participants.view'
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);

@@ -60,9 +60,7 @@ require_once __DIR__ . '/includes/navbar.php';
             <p class="lead mb-4">Organiza, participa y administra juntas de ahorro de manera sencilla y segura.</p>
             <div class="d-flex gap-3">
                 <?php if($usuarioLogueado): ?>
-                    <a href="crear-junta.php" class="btn btn-primary btn-lg px-4">
-                        <i class="fas fa-plus me-2"></i>Crear Nueva Junta
-                    </a>
+                    
                 <?php else: ?>
                     <a href="registro.php" class="btn btn-primary btn-lg px-4">
                         <i class="fas fa-user-plus me-2"></i>Regístrate Gratis

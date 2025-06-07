@@ -28,13 +28,31 @@
 │   ├── Usuario.php
 │   └── Junta.php
 │   └── AuthHelper.php
-├── junta/
-│   ├── index.php
-│   ├── crear_junta.php
-│   └── editar_junta.php
-│   └── eliminar_junta.php
-│   ├── gestionar_junta.php      # Vista de administrador para gestionar todas las cuentas
-│   └── procesar_junta.php 
+│
+├── juntas/ (cambié de "junta/" a "juntas/" para consistencia)
+│   ├── index_junta.php          # Listado principal de juntas
+│   ├── crear_junta.php          # Formulario de creación
+│   ├── editar_junta.php         # Formulario de edición
+│   ├── eliminar_junta.php       # Proceso de eliminación
+│   ├── ver_junta.php            # Vista detallada de una junta
+│   ├── gestionar_junta.php      # Vista de administración completa
+│   ├── procesar_junta.php       # Procesamiento de formularios (crear/editar)
+│   ├── procesar_estado.php      # Para cambiar estados (activar/cancelar)
+│   ├── participantes/           # Submódulo para gestión de participantes
+│	├── agregar_par.php          # Agregar participante
+│	├── editar_par.php           # Editar participante
+│	├── eliminar_par.php         # Eliminar participante
+│       └── procesar_par.php         # Procesar acciones
+│
+├── pagos/ # Submódulo para gestión de pagos
+│       ├── index.php            # Listado de pagos
+│       ├── registrar.php        # Registrar pago
+│	└── historial.php        # Historial de pagos
+├──  desembolsos/             # Submódulo para desembolsos
+│       ├── index.php            # Listado de desembolsos
+│       ├── programar.php        # Programar desembolso
+│       └── historial.php        # Historial de desembolsos
+│	
 │
 ├── index.php
 ├── login.php

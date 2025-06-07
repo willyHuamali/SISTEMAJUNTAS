@@ -36,7 +36,7 @@
         <div class="navbar-nav">
             <div class="nav-item text-nowrap d-flex align-items-center">
                 <span class="px-3 text-white"><?php echo htmlspecialchars($_SESSION['nombre_usuario']); ?></span>
-                <a class="nav-link px-3" href="logout.php">Cerrar sesión</a>
+                <a class="nav-link px-3" href="<?php echo url('logout.php'); ?>">Cerrar sesión</a>
             </div>
         </div>
     </header>

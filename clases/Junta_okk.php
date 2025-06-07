@@ -24,7 +24,6 @@ class Junta {
         $this->conn = $db;
     }
 
-    // Métodos básicos CRUD------------------
     // Create a new junta
     public function crear() {
         try {
@@ -126,55 +125,23 @@ class Junta {
         }
     }
 
-    /**
-     * Cancela una junta (cambia estado a Cancelada)
-     * Versión mejorada que unifica las dos funciones anteriores
-     */
-    public function cancelarJunta($juntaId) {
+    // Cancel a junta
+    public function cancelar($juntaID) {
         try {
             $query = "UPDATE {$this->table} 
-                    SET Estado = 'Cancelada', FechaModificacion = NOW() 
-                    WHERE JuntaID = :id AND Estado = 'Activa'";
+                      SET Estado = 'Cancelada'
+                      WHERE JuntaID = :id AND Estado = 'Activa'";
+
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $juntaId);
+            $stmt->bindParam(':id', $juntaID);
+
             return $stmt->execute();
         } catch (PDOException $e) {
             error_log("Error al cancelar junta: " . $e->getMessage());
             return false;
         }
     }
-    /**
-     * Inicia una junta (cambia estado a En progreso)
-     */
-    public function iniciarJunta($juntaId) {
-        try {
-            $query = "UPDATE {$this->table} 
-                    SET Estado = 'En progreso', FechaInicioReal = NOW(), FechaModificacion = NOW() 
-                    WHERE JuntaID = :id AND Estado = 'Activa'";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $juntaId);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("Error al iniciar junta: " . $e->getMessage());
-            return false;
-        }
-    }
-    /**
-     * Completa una junta (cambia estado a Completada)
-     */
-    public function completarJunta($juntaId) {
-        try {
-            $query = "UPDATE {$this->table} 
-                    SET Estado = 'Completada', FechaFin = NOW(), FechaModificacion = NOW() 
-                    WHERE JuntaID = :id AND Estado = 'En progreso'";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $juntaId);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("Error al completar junta: " . $e->getMessage());
-            return false;
-        }
-    }
+
     // Generate unique code for junta
     private function generarCodigoUnico() {
         $codigo = strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
@@ -191,9 +158,7 @@ class Junta {
         }
         return $codigo;
     }
-    
 
-    // Métodos de consulta-------------------------
     // Obtener juntas recientes
     public function obtenerJuntasRecientes($limite = 6) {
         try {
@@ -224,25 +189,20 @@ class Junta {
     }
 
     // Obtener participantes de una junta
-   public function obtenerParticipantes($juntaId) {
-        try {
-            $query = "SELECT u.UsuarioID, u.NombreCompleto, u.CorreoElectronico, u.Telefono,
-                            pj.Posicion, pj.EstadoParticipacion, pj.FechaCreacion
-                    FROM participantes_junta pj
-                    JOIN usuarios u ON pj.UsuarioID = u.UsuarioID
-                    WHERE pj.JuntaID = :juntaId AND pj.EstadoParticipacion = 'Activo'
-                    ORDER BY pj.Posicion ASC";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':juntaId', $juntaId);
-            $stmt->execute();
-            
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error al obtener participantes: " . $e->getMessage());
-            return [];
-        }
+    public function obtenerParticipantes($juntaID) {
+        $query = "SELECT p.*, u.Nombre, u.Apellido, u.Email, u.Telefono 
+                  FROM ParticipantesJuntas p
+                  JOIN Usuarios u ON p.UsuarioID = u.UsuarioID
+                  WHERE p.JuntaID = :juntaID AND p.Activo = 1
+                  ORDER BY p.OrdenRecepcion";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':juntaID', $juntaID);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
     public function contarJuntasActivas($usuarioID) {
         $query = "SELECT COUNT(*) as total FROM ParticipantesJuntas pj 
                 JOIN Juntas j ON pj.JuntaID = j.JuntaID 
@@ -268,25 +228,7 @@ class Junta {
         $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
         return $resultado['monto'] ?? 0;
     }
-    public function obtenerHistorialPagos($juntaId) {
-        try {
-            $query = "SELECT p.PagoID, p.FechaPago, u.NombreCompleto AS NombreParticipante, 
-                            p.Monto, p.Estado AS EstadoPago, p.Comprobante, p.MetodoPago
-                    FROM pagos p
-                    JOIN usuarios u ON p.UsuarioID = u.UsuarioID
-                    WHERE p.JuntaID = :juntaId
-                    ORDER BY p.FechaPago DESC";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':juntaId', $juntaId);
-            $stmt->execute();
-            
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error al obtener historial de pagos: " . $e->getMessage());
-            return [];
-        }
-    }
+
     public function obtenerProximoDesembolso($usuarioID) {
         $query = "SELECT MAX(d.Monto) as monto FROM Desembolsos d
                 JOIN ParticipantesJuntas pj ON d.ParticipanteID = pj.ParticipanteID
@@ -354,20 +296,75 @@ class Junta {
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-   
-    // Métodos de paginación y filtrado
+
+    public function obtenerJuntasPorUsuario($usuarioID, $busqueda = '', $estado = '', $pagina = 1, $registrosPorPagina = 10) {
+        $offset = ($pagina - 1) * $registrosPorPagina;
+        
+        $sql = "SELECT j.* FROM Juntas j
+                JOIN ParticipantesJuntas p ON j.JuntaID = p.JuntaID
+                WHERE p.UsuarioID = :usuarioID AND p.Activo = 1";
+        
+        $params = [':usuarioID' => $usuarioID];
+        
+        if (!empty($busqueda)) {
+            $sql .= " AND (j.NombreJunta LIKE :busqueda OR j.CodigoJunta LIKE :busqueda)";
+            $params[':busqueda'] = "%$busqueda%";
+        }
+        
+        if (!empty($estado)) {
+            $sql .= " AND j.Estado = :estado";
+            $params[':estado'] = $estado;
+        }
+        
+        $sql .= " LIMIT :offset, :limit";
+        
+        $stmt = $this->conn->prepare($sql);
+        
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $registrosPorPagina, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function contarJuntasPorUsuario($usuarioID, $busqueda = '', $estado = '') {
+        $sql = "SELECT COUNT(*) as total FROM Juntas j
+                JOIN ParticipantesJuntas p ON j.JuntaID = p.JuntaID
+                WHERE p.UsuarioID = :usuarioID AND p.Activo = 1";
+        
+        $params = [':usuarioID' => $usuarioID];
+        
+        if (!empty($busqueda)) {
+            $sql .= " AND (j.NombreJunta LIKE :busqueda OR j.CodigoJunta LIKE :busqueda)";
+            $params[':busqueda'] = "%$busqueda%";
+        }
+        
+        if (!empty($estado)) {
+            $sql .= " AND j.Estado = :estado";
+            $params[':estado'] = $estado;
+        }
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado['total'];
+    }
+
     // Obtener todas las juntas (para administradores)
-    public function obtenerTodasLasJuntas($busqueda = '', $estados = ['Activa', 'En progreso'], $pagina = 1, $registrosPorPagina = 10) {
+    public function obtenerTodasLasJuntas($busqueda = '', $estado = '', $pagina = 1, $registrosPorPagina = 10) {
         $offset = ($pagina - 1) * $registrosPorPagina;
         
         $sql = "SELECT j.*, 
-                CONCAT(u.Nombre, ' ', u.Apellido) as CreadorNombre,
                 COUNT(pj.ParticipanteID) as NumeroParticipantes,
                 (SELECT COUNT(*) FROM ParticipantesJuntas WHERE JuntaID = j.JuntaID) as MaximoParticipantes
                 FROM {$this->table} j
-                JOIN Usuarios u ON j.CreadaPor = u.UsuarioID
                 LEFT JOIN ParticipantesJuntas pj ON j.JuntaID = pj.JuntaID AND pj.Activo = 1";
-            
+        
         $conditions = [];
         $params = [];
         
@@ -376,18 +373,9 @@ class Junta {
             $params[':busqueda'] = "%$busqueda%";
         }
         
-        if (!empty($estados)) {
-            if (is_array($estados)) {
-                $placeholders = [];
-                foreach ($estados as $key => $value) {
-                    $placeholders[] = ":estado$key";
-                    $params[":estado$key"] = $value;
-                }
-                $conditions[] = "j.Estado IN (" . implode(", ", $placeholders) . ")";
-            } else {
-                $conditions[] = "j.Estado = :estado";
-                $params[':estado'] = $estados;
-            }
+        if (!empty($estado)) {
+            $conditions[] = "j.Estado = :estado";
+            $params[':estado'] = $estado;
         }
         
         if (!empty($conditions)) {
@@ -406,15 +394,14 @@ class Junta {
         
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->bindValue(':limit', $registrosPorPagina, PDO::PARAM_INT);
-        
         $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    public function contarTodasLasJuntas($busqueda = '', $estados = ['Activa', 'En progreso']) {
-        $sql = "SELECT COUNT(*) as total 
-                FROM {$this->table} j
-                JOIN Usuarios u ON j.CreadaPor = u.UsuarioID";
+
+    // Contar todas las juntas (para administradores)
+    public function contarTodasLasJuntas($busqueda = '', $estado = '') {
+        $sql = "SELECT COUNT(*) as total FROM {$this->table} j";
         
         $conditions = [];
         $params = [];
@@ -424,18 +411,9 @@ class Junta {
             $params[':busqueda'] = "%$busqueda%";
         }
         
-        if (!empty($estados)) {
-            if (is_array($estados)) {
-                $placeholders = [];
-                foreach ($estados as $key => $value) {
-                    $placeholders[] = ":estado$key";
-                    $params[":estado$key"] = $value;
-                }
-                $conditions[] = "j.Estado IN (" . implode(", ", $placeholders) . ")";
-            } else {
-                $conditions[] = "j.Estado = :estado";
-                $params[':estado'] = $estados;
-            }
+        if (!empty($estado)) {
+            $conditions[] = "j.Estado = :estado";
+            $params[':estado'] = $estado;
         }
         
         if (!empty($conditions)) {
@@ -448,171 +426,4 @@ class Junta {
         $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
         return $resultado['total'];
     }
-
-    public function obtenerJuntasPorUsuario($usuarioID, $busqueda = '', $estados = ['Activa', 'En progreso'], $pagina = 1, $registrosPorPagina = 10) {
-        $offset = ($pagina - 1) * $registrosPorPagina;
-        
-        $sql = "SELECT DISTINCT j.*, 
-                (SELECT COUNT(*) FROM ParticipantesJuntas WHERE JuntaID = j.JuntaID AND Activo = 1) as NumeroParticipantes,
-                (SELECT COUNT(*) FROM ParticipantesJuntas WHERE JuntaID = j.JuntaID) as MaximoParticipantes,
-                EXISTS(SELECT 1 FROM ParticipantesJuntas WHERE JuntaID = j.JuntaID AND UsuarioID = :usuarioID AND Activo = 1) as EsParticipante
-                FROM Juntas j
-                LEFT JOIN ParticipantesJuntas p ON j.JuntaID = p.JuntaID AND p.Activo = 1
-                WHERE p.UsuarioID = :usuarioIDParam";
-        
-        $params = [
-            ':usuarioID' => $usuarioID,
-            ':usuarioIDParam' => $usuarioID
-        ];
-        
-        if (!empty($busqueda)) {
-            $sql .= " AND (j.NombreJunta LIKE :busqueda OR j.CodigoJunta LIKE :busqueda)";
-            $params[':busqueda'] = "%$busqueda%";
-        }
-        
-        if (!empty($estados)) {
-            $placeholders = [];
-            foreach ($estados as $key => $value) {
-                $placeholders[] = ":estado$key";
-                $params[":estado$key"] = $value;
-            }
-            $sql .= " AND j.Estado IN (" . implode(", ", $placeholders) . ")";
-        }
-    
-        $sql .= " ORDER BY j.FechaCreacion DESC
-                LIMIT :offset, :limit";
-        
-        $stmt = $this->conn->prepare($sql);
-        
-        // Vincular parámetros
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        $stmt->bindValue(':limit', $registrosPorPagina, PDO::PARAM_INT);
-        
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }  
-
-    public function contarJuntasPorUsuario($usuarioID, $busqueda = '', $estados = ['Activa', 'En progreso']) {
-        $sql = "SELECT COUNT(DISTINCT j.JuntaID) as total 
-                FROM Juntas j
-                LEFT JOIN ParticipantesJuntas p ON j.JuntaID = p.JuntaID AND p.Activo = 1
-                WHERE p.UsuarioID = :usuarioID";
-        
-        $params = [':usuarioID' => $usuarioID];
-        
-        if (!empty($busqueda)) {
-            $sql .= " AND (j.NombreJunta LIKE :busqueda OR j.CodigoJunta LIKE :busqueda)";
-            $params[':busqueda'] = "%$busqueda%";
-        }
-        
-        if (!empty($estados)) {
-            $placeholders = [];
-            foreach ($estados as $key => $value) {
-                $placeholders[] = ":estado$key";
-                $params[":estado$key"] = $value;
-            }
-            $sql .= " AND j.Estado IN (" . implode(", ", $placeholders) . ")";
-        }
-        
-        $stmt = $this->conn->prepare($sql);
-        
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
-        $stmt->execute();
-        
-        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $resultado['total'];
-    }
-    /**
-     * Verifica si un usuario es participante de una junta (versión mejorada)
-     */
-    public function esParticipante($juntaId, $usuarioId) {
-        try {
-            $query = "SELECT COUNT(*) FROM participantes_junta 
-                    WHERE JuntaID = :juntaId AND UsuarioID = :usuarioId AND EstadoParticipacion = 'Activo'";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':juntaId', $juntaId);
-            $stmt->bindParam(':usuarioId', $usuarioId);
-            $stmt->execute();
-            
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log("Error al verificar participante: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Agrega un participante a una junta (versión mejorada)
-     */
-    public function agregarParticipante($juntaId, $usuarioId) {
-        try {
-            // Verificar si ya es participante (aunque inactivo)
-            $queryCheck = "SELECT COUNT(*) FROM participantes_junta 
-                        WHERE JuntaID = :juntaId AND UsuarioID = :usuarioId";
-            
-            $stmtCheck = $this->conn->prepare($queryCheck);
-            $stmtCheck->bindParam(':juntaId', $juntaId);
-            $stmtCheck->bindParam(':usuarioId', $usuarioId);
-            $stmtCheck->execute();
-            
-            if ($stmtCheck->fetchColumn() > 0) {
-                // Actualizar si ya existe pero está inactivo
-                $query = "UPDATE participantes_junta 
-                        SET EstadoParticipacion = 'Activo', FechaModificacion = NOW()
-                        WHERE JuntaID = :juntaId AND UsuarioID = :usuarioId";
-            } else {
-                // Insertar nuevo participante
-                $query = "INSERT INTO participantes_junta 
-                        (JuntaID, UsuarioID, EstadoParticipacion, FechaCreacion, Posicion)
-                        VALUES (:juntaId, :usuarioId, 'Activo', NOW(), 
-                        (SELECT IFNULL(MAX(Posicion), 0) + 1 FROM participantes_junta WHERE JuntaID = :juntaId))";
-            }
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':juntaId', $juntaId);
-            $stmt->bindParam(':usuarioId', $usuarioId);
-            
-            if ($stmt->execute()) {
-                $this->actualizarContadorParticipantes($juntaId);
-                return true;
-            }
-            
-            return false;
-        } catch (PDOException $e) {
-            error_log("Error al agregar participante: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Actualiza el contador de participantes en una junta (privada)
-     */
-    private function actualizarContadorParticipantes($juntaId) {
-        $query = "UPDATE {$this->table} j
-                SET j.NumeroParticipantes = (
-                    SELECT COUNT(*) FROM participantes_junta 
-                    WHERE JuntaID = :juntaId AND EstadoParticipacion = 'Activo'
-                ),
-                FechaModificacion = NOW()
-                WHERE j.JuntaID = :juntaId";
-        
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':juntaId', $juntaId);
-        return $stmt->execute();
-    }
-
-    /**
-     * Obtiene los participantes activos de una junta (versión mejorada)
-     */
-        
-   
 }

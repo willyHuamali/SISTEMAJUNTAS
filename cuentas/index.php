@@ -129,7 +129,7 @@ include '../includes/header.php';
 
     <?php if ($esAdministrador): ?>
         <div class="mt-3">
-            <a href="gestionar.php" class="btn btn-outline-secondary">
+            <a href="gestionar_cuenta.php" class="btn btn-outline-secondary">
                 <i class="fas fa-list me-1"></i> Gestionar Todas las Cuentas
             </a>
         </div>

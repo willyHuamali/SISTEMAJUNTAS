@@ -79,40 +79,6 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
                         </ul>
                     </li>
                     
-                    <!-- Menú Participantes -->
-                    <?php if($authHelper->tienePermiso('participants.view', $rolUsuario) || 
-                            $authHelper->tienePermiso('participants.manage', $rolUsuario)): ?>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle <?= strpos($_SERVER['PHP_SELF'], 'juntas/participantes/') !== false ? 'active' : '' ?>" 
-                               href="#" id="navbarParticipantes" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-friends"></i> Participantes
-                            </a>
-                            <ul class="dropdown-menu">
-                                <?php if($authHelper->tienePermiso('participants.view', $rolUsuario)): ?>
-                                    <li><a class="dropdown-item" href="<?php echo url('juntas/participantes/'); ?>">
-                                        <i class="fas fa-list me-2"></i>Listar Participantes
-                                    </a></li>
-                                <?php endif; ?>
-                                
-                                <?php if($authHelper->tienePermiso('participants.manage', $rolUsuario)): ?>
-                                    <li><a class="dropdown-item" href="<?php echo url('juntas/participantes/agregar_par.php'); ?>">
-                                        <i class="fas fa-user-plus me-2"></i>Agregar Participante
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="<?php echo url('juntas/participantes/editar_par.php'); ?>">
-                                        <i class="fas fa-user-edit me-2"></i>Editar Participante
-                                    </a></li>
-                                <?php endif; ?>
-                                
-                                <?php if($authHelper->tienePermiso('participants.assign_order', $rolUsuario)): ?>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="<?php echo url('juntas/participantes/asignar_orden.php'); ?>">
-                                        <i class="fas fa-sort-numeric-down me-2"></i>Asignar Orden
-                                    </a></li>
-                                <?php endif; ?>
-                            </ul>
-                        </li>
-                    <?php endif; ?>
-                    
                     <!-- Menú Pagos -->
                     <?php if($authHelper->tienePermiso('payments.view', $rolUsuario) || $authHelper->tienePermiso('payments.register', $rolUsuario)): ?>
                         <li class="nav-item dropdown">

@@ -133,7 +133,7 @@ require_once '../includes/navbar.php';
                                         </a>
                                     </td>
                                     <td><?= htmlspecialchars($jun['CodigoJunta']) ?></td>
-                                    <td>S/ <?= number_format($jun['Monto'], 2) ?></td>
+                                    <td>S/ <?= number_format($jun['MontoAporte'], 2) ?></td>
                                     <td><?= $jun['NumeroParticipantes'] ?> / <?= $jun['MaximoParticipantes'] ?></td>
                                     <td>
                                         <span class="badge bg-<?= 

@@ -240,4 +240,19 @@ class Usuario {
             ':usuarioId' => $usuarioId
         ]);
     }
+
+    public function obtenerUsuariosDisponiblesParaJunta($juntaId) {
+    $query = "SELECT u.UsuarioID, u.Nombre, u.Apellido, u.Email 
+              FROM Usuarios u
+              WHERE u.Activo = 1 AND u.UsuarioID NOT IN (
+                  SELECT pj.UsuarioID FROM ParticipantesJuntas pj 
+                  WHERE pj.JuntaID = :juntaId AND pj.Activo = 1
+              )";
+    
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':juntaId', $juntaId);
+    $stmt->execute();
+    
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 }
