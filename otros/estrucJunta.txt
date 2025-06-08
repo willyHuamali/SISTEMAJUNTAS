@@ -1,4 +1,4 @@
-/sistema-juntas/
+/sistemajuntas/
 │
 ├── assets/
 │   ├── css/
@@ -46,7 +46,7 @@
 │	├── editar_par.php           # Editar participante
 │	├── eliminar_par.php         # Eliminar participante
 │       └── procesar_par.php         # Procesar acciones
-│       └── asignar_order_par.php         # Procesar acciones
+│       └── asignar_order_par.php    # Procesar acciones
 │
 ├── pagos/ # Submódulo para gestión de pagos
 │       ├── index.php            # Listado de pagos

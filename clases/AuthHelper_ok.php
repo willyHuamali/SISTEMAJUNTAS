@@ -37,4 +37,29 @@ class AuthHelper {
         }
     }
     
+    /**
+     * Registra una acción en la bitácora del sistema
+     * 
+     * @param int $usuarioId ID del usuario que realiza la acción
+     * @param string $accion Descripción breve de la acción
+     * @param string $detalles Detalles adicionales (opcional)
+     * @return bool True si se registró correctamente, false si hubo error
+     */
+    public function registrarAccion($usuarioId, $accion, $detalles = '')
+    {
+        try {
+            $query = "INSERT INTO bitacora (usuario_id, accion, detalles, fecha) 
+                     VALUES (:usuario_id, :accion, :detalles, NOW())";
+            $stmt = $this->db->prepare($query);
+            
+            $stmt->bindParam(':usuario_id', $usuarioId, \PDO::PARAM_INT);
+            $stmt->bindParam(':accion', $accion, \PDO::PARAM_STR);
+            $stmt->bindParam(':detalles', $detalles, \PDO::PARAM_STR);
+            
+            return $stmt->execute();
+        } catch (\PDOException $e) {
+            error_log("Error al registrar acción en bitácora: " . $e->getMessage());
+            return false;
+        }
+    }
 }

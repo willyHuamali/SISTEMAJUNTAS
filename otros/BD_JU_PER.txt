@@ -312,7 +312,8 @@ AND NOT EXISTS (
 
 
 
---CAMPOS NUEVOS
+--CAMPOS NUEVOS 08-JUNIO 
+
 -- CAMPO MaximoParticipantes en la tabla juntas
 ALTER TABLE Juntas ADD COLUMN MaximoParticipantes INT NOT NULL DEFAULT 10;
 ALTER TABLE Juntas ADD COLUMN FechaModificacion DATETIME NULL;
@@ -367,3 +368,123 @@ AND NOT EXISTS (
 UPDATE Roles SET 
     Descripcion = 'Acceso completo a todas las funcionalidades del sistema, incluyendo configuración, usuarios, juntas, participantes, pagos y cuentas bancarias'
 WHERE NombreRol = 'Administrador';
+
+-- PERMISOS PARA MODULO DE PARTICIPANTES  08- JUNIO 
+-- 1. Primero, insertamos los nuevos permisos específicos para participantes en juntas:
+-- Insertar nuevos permisos para el módulo de participantes en juntas
+INSERT INTO Permisos (NombrePermiso, Descripcion, Codigo)
+SELECT * FROM (
+    -- Permiso para gestionar completamente los participantes
+    SELECT 'Gestionar Participantes Juntas' AS NombrePermiso, 
+           'Administrar completamente los participantes en juntas (agregar, editar, eliminar)' AS Descripcion, 
+           'participantesjuntas.manage' AS Codigo
+    
+    UNION SELECT 'Ver Participantes Juntas', 
+           'Ver el listado de participantes en juntas', 
+           'participantesjuntas.view'
+    
+    UNION SELECT 'Agregar Participantes a Juntas', 
+           'Agregar nuevos participantes a juntas existentes', 
+           'participantesjuntas.add'
+    
+    UNION SELECT 'Editar Participantes en Juntas', 
+           'Modificar información de participantes en juntas', 
+           'participantesjuntas.edit'
+    
+    UNION SELECT 'Eliminar Participantes de Juntas', 
+           'Remover participantes de juntas', 
+           'participantesjuntas.remove'
+    
+    UNION SELECT 'Asignar Orden de Participantes', 
+           'Definir el orden de recepción de fondos para participantes', 
+           'participantesjuntas.assign_order'
+    
+    UNION SELECT 'Gestionar Garantías de Participantes', 
+           'Administrar las garantías asociadas a participantes', 
+           'participantesjuntas.manage_guarantees'
+    
+    UNION SELECT 'Ver Historial de Participantes', 
+           'Consultar el historial de participación en juntas', 
+           'participantesjuntas.history'
+    
+    UNION SELECT 'Exportar Listado de Participantes', 
+           'Exportar el listado de participantes a diferentes formatos', 
+           'participantesjuntas.export'
+) AS nuevos_permisos
+WHERE NOT EXISTS (
+    SELECT 1 FROM Permisos WHERE Codigo = nuevos_permisos.Codigo
+);
+
+-- 2. Asignamos estos permisos a los roles correspondientes:
+-- Asignar permisos al rol Administrador (todos los permisos de participantes)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Administrador' 
+AND p.Codigo LIKE 'participantesjuntas.%'
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Asignar permisos al rol Coordinador (gestión completa excepto exportar)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Coordinador' 
+AND p.Codigo IN (
+    'participantesjuntas.manage', 
+    'participantesjuntas.view', 
+    'participantesjuntas.add',
+    'participantesjuntas.edit',
+    'participantesjuntas.remove',
+    'participantesjuntas.assign_order',
+    'participantesjuntas.manage_guarantees',
+    'participantesjuntas.history'
+)
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Asignar permisos al rol Cobrador (solo ver y gestionar garantías)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Cobrador' 
+AND p.Codigo IN (
+    'participantesjuntas.view',
+    'participantesjuntas.manage_guarantees'
+)
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Asignar permisos al rol Participante (solo ver su propia participación)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Participante' 
+AND p.Codigo IN (
+    'participantesjuntas.view',
+    'participantesjuntas.history'
+)
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Asignar permisos al rol Auditor (solo ver)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Auditor' 
+AND p.Codigo IN (
+    'participantesjuntas.view',
+    'participantesjuntas.history'
+)
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
