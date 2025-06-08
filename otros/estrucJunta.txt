@@ -27,9 +27,10 @@
 ├── clases/
 │   ├── Usuario.php
 │   └── Junta.php
+│   └── ParticipanteJunta.php
 │   └── AuthHelper.php
 │
-├── juntas/ (cambié de "junta/" a "juntas/" para consistencia)
+├── juntas/ # módulo para gestión de Juntas
 │   ├── index_junta.php          # Listado principal de juntas
 │   ├── crear_junta.php          # Formulario de creación
 │   ├── editar_junta.php         # Formulario de edición
@@ -39,11 +40,13 @@
 │   ├── procesar_junta.php       # Procesamiento de formularios (crear/editar)
 │   ├── procesar_estado.php      # Para cambiar estados (activar/cancelar)
 │
-├── participantes/           # Submódulo para gestión de participantes
+├── participantes/ # módulo para gestión de participantes
+│	├── participantes.php        # Listado principal de participantes
 │	├── agregar_par.php          # Agregar participante
 │	├── editar_par.php           # Editar participante
 │	├── eliminar_par.php         # Eliminar participante
 │       └── procesar_par.php         # Procesar acciones
+│       └── asignar_order_par.php         # Procesar acciones
 │
 ├── pagos/ # Submódulo para gestión de pagos
 │       ├── index.php            # Listado de pagos

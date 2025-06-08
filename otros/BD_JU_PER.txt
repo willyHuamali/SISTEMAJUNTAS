@@ -317,3 +317,53 @@ AND NOT EXISTS (
 ALTER TABLE Juntas ADD COLUMN MaximoParticipantes INT NOT NULL DEFAULT 10;
 ALTER TABLE Juntas ADD COLUMN FechaModificacion DATETIME NULL;
 
+
+-- NUEVOS PERMISOS PARA EL ADMINISTRADOR
+-- Primero, asegurarnos de que el rol Administrador existe
+INSERT IGNORE INTO Roles (NombreRol, Descripcion) VALUES 
+('Administrador', 'Acceso completo al sistema');
+
+-- Insertar todos los permisos faltantes para las nuevas funcionalidades
+-- Modificado para verificar por ambos campos (NombrePermiso y Codigo)
+INSERT INTO Permisos (NombrePermiso, Descripcion, Codigo)
+SELECT nuevos_permisos.NombrePermiso, nuevos_permisos.Descripcion, nuevos_permisos.Codigo
+FROM (
+    -- Permisos para la gestión de juntas
+    SELECT 'Gestionar Todas las Juntas' AS NombrePermiso, 'Permite gestionar juntas de otros usuarios' AS Descripcion, 'juntas.manage_all' AS Codigo
+    UNION SELECT 'Ver Mis Juntas', 'Permite ver las juntas propias', 'juntas.view_own'
+    UNION SELECT 'Administrar Participantes', 'Gestionar participantes en juntas', 'juntas.manage_participants'
+    
+    -- Permisos para participantes
+    UNION SELECT 'Gestionar Participantes', 'Agregar, editar y eliminar participantes en juntas', 'participants.manage'
+    UNION SELECT 'Ver Participantes', 'Ver listado de participantes en juntas', 'participants.view'
+    UNION SELECT 'Asignar Orden Participantes', 'Definir el orden de recepción en juntas', 'participants.assign_order'
+    
+    -- Permisos para cuentas bancarias
+    UNION SELECT 'Gestionar Cuentas Bancarias', 'Crear, editar y eliminar cuentas bancarias propias', 'accounts.manage'
+    UNION SELECT 'Ver Cuentas Bancarias', 'Ver información de cuentas bancarias', 'accounts.view'
+    UNION SELECT 'Gestionar Todas las Cuentas', 'Administrar cuentas bancarias de todos los usuarios', 'accounts.manage_all'
+    
+    -- Permisos para notificaciones
+    UNION SELECT 'Ver Notificaciones', 'Ver y gestionar notificaciones del sistema', 'notifications.view'
+) AS nuevos_permisos
+WHERE NOT EXISTS (
+    SELECT 1 FROM Permisos 
+    WHERE Codigo = nuevos_permisos.Codigo 
+    OR NombrePermiso = nuevos_permisos.NombrePermiso
+);
+
+-- Asignar TODOS los permisos existentes al rol Administrador
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r
+CROSS JOIN Permisos p
+WHERE r.NombreRol = 'Administrador'
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Actualizar la descripción del rol Administrador para reflejar que tiene acceso completo
+UPDATE Roles SET 
+    Descripcion = 'Acceso completo a todas las funcionalidades del sistema, incluyendo configuración, usuarios, juntas, participantes, pagos y cuentas bancarias'
+WHERE NombreRol = 'Administrador';
