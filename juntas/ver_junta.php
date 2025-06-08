@@ -39,7 +39,7 @@ if (!$juntaDetalle) {
 }
 
 // Verificar permisos para ver esta junta específica
-if (!$authHelper->tienePermiso('juntas.manage_all', $_SESSION['rol_id']) {
+if (!$authHelper->tienePermiso('juntas.manage_all', $_SESSION['rol_id'])) {
     // Si no es administrador, verificar si es participante o creador
     $esParticipante = $junta->esParticipante($_GET['id'], $_SESSION['usuario_id']);
     $esCreador = ($juntaDetalle['CreadorID'] == $_SESSION['usuario_id']);
@@ -130,11 +130,11 @@ require_once '../includes/navbar.php';
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Frecuencia:</span>
-                            <strong><?= htmlspecialchars($juntaDetalle['Frecuencia']) ?></strong>
+                            <strong><?= htmlspecialchars($juntaDetalle['FrecuenciaPago']) ?></strong>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Participantes:</span>
-                            <strong><?= count($participantes) ?> / <?= $juntaDetalle['MaximoParticipantes'] ?></strong>
+                            <strong><?= count($participantes) ?> / <?= count($participantes) ?></strong>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Fecha de inicio:</span>

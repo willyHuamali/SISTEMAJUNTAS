@@ -115,6 +115,7 @@ CREATE TABLE Juntas (
     PorcentajeComision DECIMAL(5,2) DEFAULT 0,
     PorcentajePenalidad DECIMAL(5,2) DEFAULT 0,
     DiasGraciaPenalidad INT DEFAULT 0,
+    MaximoParticipantes (int, 10)
     FOREIGN KEY (CreadaPor) REFERENCES Usuarios(UsuarioID),
     CONSTRAINT chk_estado CHECK (Estado IN ('Activa', 'Cerrada', 'Cancelada')),
     CONSTRAINT chk_comision CHECK (PorcentajeComision >= 0 AND PorcentajeComision <= 100),

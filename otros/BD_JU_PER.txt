@@ -309,3 +309,11 @@ AND NOT EXISTS (
     SELECT 1 FROM Roles_Permisos rp 
     WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
 );
+
+
+
+--CAMPOS NUEVOS
+-- CAMPO MaximoParticipantes en la tabla juntas
+ALTER TABLE Juntas ADD COLUMN MaximoParticipantes INT NOT NULL DEFAULT 10;
+ALTER TABLE Juntas ADD COLUMN FechaModificacion DATETIME NULL;
+

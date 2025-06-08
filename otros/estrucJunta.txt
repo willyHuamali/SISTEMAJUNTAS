@@ -38,7 +38,8 @@
 │   ├── gestionar_junta.php      # Vista de administración completa
 │   ├── procesar_junta.php       # Procesamiento de formularios (crear/editar)
 │   ├── procesar_estado.php      # Para cambiar estados (activar/cancelar)
-│   ├── participantes/           # Submódulo para gestión de participantes
+│
+├── participantes/           # Submódulo para gestión de participantes
 │	├── agregar_par.php          # Agregar participante
 │	├── editar_par.php           # Editar participante
 │	├── eliminar_par.php         # Eliminar participante

@@ -19,6 +19,7 @@ class Junta {
     public $PorcentajeComision;
     public $PorcentajePenalidad;
     public $DiasGraciaPenalidad;
+    public $MaximoParticipantes;
 
     public function __construct($db) {
         $this->conn = $db;
@@ -32,13 +33,13 @@ class Junta {
             $this->CodigoJunta = $this->generarCodigoUnico();
 
             $query = "INSERT INTO {$this->table} 
-                      (NombreJunta, Descripcion, CodigoJunta, MontoAporte, FrecuenciaPago, 
-                      FechaInicio, CreadaPor, RequiereGarantia, MontoGarantia, 
-                      PorcentajeComision, PorcentajePenalidad, DiasGraciaPenalidad) 
-                      VALUES 
-                      (:nombre, :descripcion, :codigo, :monto, :frecuencia, 
-                      :fechaInicio, :creadaPor, :requiereGarantia, :montoGarantia, 
-                      :comision, :penalidad, :diasGracia)";
+                    (NombreJunta, Descripcion, CodigoJunta, MontoAporte, FrecuenciaPago, 
+                    FechaInicio, CreadaPor, RequiereGarantia, MontoGarantia, 
+                    PorcentajeComision, PorcentajePenalidad, DiasGraciaPenalidad, MaximoParticipantes) 
+                    VALUES 
+                    (:nombre, :descripcion, :codigo, :monto, :frecuencia, 
+                    :fechaInicio, :creadaPor, :requiereGarantia, :montoGarantia, 
+                    :comision, :penalidad, :diasGracia, :maxParticipantes)";
 
             $stmt = $this->conn->prepare($query);
 
@@ -55,6 +56,7 @@ class Junta {
             $stmt->bindParam(':comision', $this->PorcentajeComision);
             $stmt->bindParam(':penalidad', $this->PorcentajePenalidad);
             $stmt->bindParam(':diasGracia', $this->DiasGraciaPenalidad);
+            $stmt->bindParam(':maxParticipantes', $this->MaximoParticipantes, PDO::PARAM_INT);
 
             // Execute and return result
             if ($stmt->execute()) {
@@ -71,35 +73,53 @@ class Junta {
     // Update a junta
     public function actualizar() {
         try {
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
             $query = "UPDATE {$this->table} 
-                      SET NombreJunta = :nombre, 
-                          Descripcion = :descripcion,
-                          RequiereGarantia = :requiereGarantia,
-                          MontoGarantia = :montoGarantia,
-                          PorcentajeComision = :comision,
-                          PorcentajePenalidad = :penalidad,
-                          DiasGraciaPenalidad = :diasGracia
-                      WHERE JuntaID = :id";
+                    SET NombreJunta = :nombre, 
+                        Descripcion = :descripcion,
+                        RequiereGarantia = :requiereGarantia,
+                        MontoGarantia = :montoGarantia,
+                        PorcentajeComision = :comision,
+                        PorcentajePenalidad = :penalidad,
+                        DiasGraciaPenalidad = :diasGracia,
+                        MaximoParticipantes = :maxParticipantes,
+                        FechaModificacion = NOW()
+                    WHERE JuntaID = :id";
 
             $stmt = $this->conn->prepare($query);
 
-            // Bind parameters
-            $stmt->bindParam(':nombre', $this->NombreJunta);
-            $stmt->bindParam(':descripcion', $this->Descripcion);
-            $stmt->bindParam(':requiereGarantia', $this->RequiereGarantia, PDO::PARAM_BOOL);
-            $stmt->bindParam(':montoGarantia', $this->MontoGarantia);
-            $stmt->bindParam(':comision', $this->PorcentajeComision);
-            $stmt->bindParam(':penalidad', $this->PorcentajePenalidad);
-            $stmt->bindParam(':diasGracia', $this->DiasGraciaPenalidad);
-            $stmt->bindParam(':id', $this->JuntaID);
+            // Convertir valores booleanos a 1/0 para MySQL
+            $requiereGarantia = $this->RequiereGarantia ? 1 : 0;
 
-            return $stmt->execute();
+            // Bind parameters con tipos explícitos
+            $stmt->bindParam(':nombre', $this->NombreJunta, PDO::PARAM_STR);
+            $stmt->bindParam(':descripcion', $this->Descripcion, PDO::PARAM_STR);
+            $stmt->bindParam(':requiereGarantia', $requiereGarantia, PDO::PARAM_INT);
+            $stmt->bindParam(':montoGarantia', $this->MontoGarantia, PDO::PARAM_STR);
+            $stmt->bindParam(':comision', $this->PorcentajeComision, PDO::PARAM_STR);
+            $stmt->bindParam(':penalidad', $this->PorcentajePenalidad, PDO::PARAM_STR);
+            $stmt->bindParam(':diasGracia', $this->DiasGraciaPenalidad, PDO::PARAM_INT);
+            $stmt->bindParam(':maxParticipantes', $this->MaximoParticipantes, PDO::PARAM_INT);
+            $stmt->bindParam(':id', $this->JuntaID, PDO::PARAM_INT);
+
+            $result = $stmt->execute();
+            
+            if ($result === false) {
+                $errorInfo = $stmt->errorInfo();
+                error_log("Error al ejecutar la consulta: " . print_r($errorInfo, true));
+                throw new Exception("Error de base de datos: " . $errorInfo[2]);
+            }
+            
+            return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
-            error_log("Error al actualizar junta: " . $e->getMessage());
-            return false;
+            error_log("Error PDO al actualizar junta: " . $e->getMessage() . "\nConsulta: " . $query);
+            throw $e; // Re-lanzar la excepción para manejo superior
+        } catch (Exception $e) {
+            error_log("Error general al actualizar junta: " . $e->getMessage());
+            throw $e;
         }
     }
-
     // Delete a junta
     public function eliminar($juntaID) {
         try {
@@ -212,9 +232,9 @@ class Junta {
     // Obtener detalles de una junta específica
     public function obtenerPorId($juntaID) {
         $query = "SELECT j.*, u.Nombre as CreadorNombre, u.Apellido as CreadorApellido 
-                  FROM {$this->table} j
-                  JOIN Usuarios u ON j.CreadaPor = u.UsuarioID
-                  WHERE j.JuntaID = :juntaID";
+                FROM {$this->table} j
+                JOIN Usuarios u ON j.CreadaPor = u.UsuarioID
+                WHERE j.JuntaID = :juntaID";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':juntaID', $juntaID);
@@ -361,12 +381,12 @@ class Junta {
         $offset = ($pagina - 1) * $registrosPorPagina;
         
         $sql = "SELECT j.*, 
-                CONCAT(u.Nombre, ' ', u.Apellido) as CreadorNombre,
-                COUNT(pj.ParticipanteID) as NumeroParticipantes,
-                (SELECT COUNT(*) FROM ParticipantesJuntas WHERE JuntaID = j.JuntaID) as MaximoParticipantes
-                FROM {$this->table} j
-                JOIN Usuarios u ON j.CreadaPor = u.UsuarioID
-                LEFT JOIN ParticipantesJuntas pj ON j.JuntaID = pj.JuntaID AND pj.Activo = 1";
+            CONCAT(u.Nombre, ' ', u.Apellido) as CreadorNombre,
+            COUNT(pj.ParticipanteID) as NumeroParticipantes,
+            j.MaximoParticipantes
+            FROM {$this->table} j
+            JOIN Usuarios u ON j.CreadaPor = u.UsuarioID
+            LEFT JOIN ParticipantesJuntas pj ON j.JuntaID = pj.JuntaID AND pj.Activo = 1";
             
         $conditions = [];
         $params = [];
@@ -555,7 +575,22 @@ class Junta {
      */
     public function agregarParticipante($juntaId, $usuarioId) {
         try {
-            // Verificar si ya es participante (aunque inactivo)
+            // 1. Verificar si hay cupo disponible
+            $queryCupo = "SELECT COUNT(*) as actual, MaximoParticipantes as maximo 
+                        FROM participantes_junta pj
+                        JOIN Juntas j ON pj.JuntaID = j.JuntaID
+                        WHERE pj.JuntaID = :juntaId AND pj.EstadoParticipacion = 'Activo'";
+            
+            $stmtCupo = $this->conn->prepare($queryCupo);
+            $stmtCupo->bindParam(':juntaId', $juntaId);
+            $stmtCupo->execute();
+            $cupo = $stmtCupo->fetch(PDO::FETCH_ASSOC);
+            
+            if ($cupo['actual'] >= $cupo['maximo']) {
+                return false; // No hay cupo disponible
+            }
+
+            // 2. Verificar si ya es participante (aunque inactivo)
             $queryCheck = "SELECT COUNT(*) FROM participantes_junta 
                         WHERE JuntaID = :juntaId AND UsuarioID = :usuarioId";
             
@@ -565,23 +600,26 @@ class Junta {
             $stmtCheck->execute();
             
             if ($stmtCheck->fetchColumn() > 0) {
-                // Actualizar si ya existe pero está inactivo
+                // 3a. Actualizar si ya existe pero está inactivo
                 $query = "UPDATE participantes_junta 
-                        SET EstadoParticipacion = 'Activo', FechaModificacion = NOW()
+                        SET EstadoParticipacion = 'Activo', 
+                            FechaModificacion = NOW()
                         WHERE JuntaID = :juntaId AND UsuarioID = :usuarioId";
             } else {
-                // Insertar nuevo participante
+                // 3b. Insertar nuevo participante
                 $query = "INSERT INTO participantes_junta 
                         (JuntaID, UsuarioID, EstadoParticipacion, FechaCreacion, Posicion)
                         VALUES (:juntaId, :usuarioId, 'Activo', NOW(), 
                         (SELECT IFNULL(MAX(Posicion), 0) + 1 FROM participantes_junta WHERE JuntaID = :juntaId))";
             }
             
+            // 4. Ejecutar la operación (INSERT o UPDATE)
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':juntaId', $juntaId);
             $stmt->bindParam(':usuarioId', $usuarioId);
             
             if ($stmt->execute()) {
+                // 5. Actualizar contador de participantes
                 $this->actualizarContadorParticipantes($juntaId);
                 return true;
             }
@@ -614,5 +652,11 @@ class Junta {
      * Obtiene los participantes activos de una junta (versión mejorada)
      */
         
-   
+    public function obtenerJuntaPorID($id) {
+    $query = "SELECT * FROM juntas WHERE JuntaID = ?";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(1, $id);
+    $stmt->execute();
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 }

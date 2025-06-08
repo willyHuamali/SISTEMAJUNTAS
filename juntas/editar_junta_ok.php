@@ -52,15 +52,10 @@ if ($juntaData['Estado'] === 'Completada' || $juntaData['Estado'] === 'Cancelada
     exit;
 }
 
-// Obtener participantes actuales
-$participantes = $junta->obtenerParticipantes($juntaId);
-$numParticipantes = count($participantes);
-
 // Procesar formulario si se envió
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre = trim($_POST['nombre']);
     $descripcion = trim($_POST['descripcion']);
-    $maxParticipantes = intval($_POST['max_participantes']);
     $requiereGarantia = isset($_POST['requiere_garantia']) ? 1 : 0;
     $montoGarantia = $requiereGarantia ? floatval($_POST['monto_garantia']) : 0;
     $comision = floatval($_POST['comision']);
@@ -70,36 +65,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validaciones
     $errores = [];
     if (empty($nombre)) $errores[] = 'El nombre es obligatorio';
-    if ($maxParticipantes < $numParticipantes) {
-        $errores[] = 'El máximo de participantes no puede ser menor al número actual (' . $numParticipantes . ')';
-    }
     if ($comision < 0 || $comision > 100) $errores[] = 'La comisión debe estar entre 0 y 100';
     if ($penalidad < 0 || $penalidad > 100) $errores[] = 'La penalidad debe estar entre 0 y 100';
 
-    // En la sección donde procesas el formulario:
     if (empty($errores)) {
         $junta->JuntaID = $juntaId;
         $junta->NombreJunta = $nombre;
         $junta->Descripcion = $descripcion;
-        $junta->MaximoParticipantes = $maxParticipantes;
         $junta->RequiereGarantia = $requiereGarantia;
         $junta->MontoGarantia = $montoGarantia;
         $junta->PorcentajeComision = $comision;
         $junta->PorcentajePenalidad = $penalidad;
         $junta->DiasGraciaPenalidad = $diasGracia;
 
-        try {
-            if ($junta->actualizar()) {
-                $_SESSION['mensaje_exito'] = 'Junta actualizada exitosamente!';
-                header('Location: index_junta.php');
-                exit;
-            } else {
-                $errores[] = 'No se realizaron cambios en la junta.';
-            }
-        } catch (PDOException $e) {
-            $errores[] = 'Error de base de datos al actualizar: ' . $e->getMessage();
-        } catch (Exception $e) {
-            $errores[] = 'Error al actualizar la junta: ' . $e->getMessage();
+        if ($junta->actualizar()) {
+            $_SESSION['mensaje_exito'] = 'Junta actualizada exitosamente!';
+            header('Location: index_junta.php');
+            exit;
+        } else {
+            $errores[] = 'Error al actualizar la junta. Inténtalo nuevamente.';
         }
     }
 }
@@ -154,13 +138,12 @@ require_once '../includes/navbar.php';
                             <input type="text" class="form-control" value="<?= 
                                 htmlspecialchars($juntaData['FrecuenciaPago']) ?>" readonly>
                         </div>
-
                         <div class="mb-3">
                             <label for="max_participantes" class="form-label">Máximo de Participantes *</label>
                             <input type="number" class="form-control" id="max_participantes" name="max_participantes" 
-                                min="<?= $numParticipantes ?>" max="50" required 
+                                min="<?= count($participantes) ?>" required 
                                 value="<?= htmlspecialchars($juntaData['MaximoParticipantes'] ?? 10) ?>">
-                            <small class="text-muted">Mínimo <?= $numParticipantes ?> (participantes actuales), máximo 50</small>
+                            <small class="text-muted">El mínimo es <?= count($participantes) ?> (participantes actuales)</small>
                         </div>
 
                         <div class="mb-3">
@@ -169,7 +152,7 @@ require_once '../includes/navbar.php';
                                 date('d/m/Y', strtotime($juntaData['FechaInicio'])) ?>" readonly>
                         </div>
 
-                        <div class="mb-3 form-check form-switch">
+                        <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="requiere_garantia" 
                                    name="requiere_garantia" <?= $juntaData['RequiereGarantia'] ? 'checked' : '' ?>>
                             <label class="form-check-label" for="requiere_garantia">Requiere Garantía</label>
@@ -208,7 +191,7 @@ require_once '../includes/navbar.php';
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="index_junta.php" class="btn btn-outline-secondary me-md-2">
+                            <a href="index_junta.php" class="btn btn-secondary me-md-2">
                                 <i class="fas fa-times me-1"></i> Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary">
@@ -223,17 +206,8 @@ require_once '../includes/navbar.php';
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Toggle campos de garantía
-    document.getElementById('requiere_garantia').addEventListener('change', function() {
-        const garantiaFields = document.getElementById('garantia_fields');
-        garantiaFields.style.display = this.checked ? 'block' : 'none';
-        if (this.checked) {
-            document.getElementById('monto_garantia').required = true;
-        } else {
-            document.getElementById('monto_garantia').required = false;
-        }
-    });
+document.getElementById('requiere_garantia').addEventListener('change', function() {
+    document.getElementById('garantia_fields').style.display = this.checked ? 'block' : 'none';
 });
 </script>
 
