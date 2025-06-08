@@ -1,10 +1,10 @@
 <?php
-require_once __DIR__ . '/../includes/config.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/functions.php';
-require_once __DIR__ . '/../includes/db.php';
-require_once __DIR__ . '/../clases/AuthHelper.php';
-require_once __DIR__ . '/../clases/ParticipanteJunta.php';
+require_once __DIR__ . '/../../includes/config.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/functions.php';
+require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../clases/AuthHelper.php';
+require_once __DIR__ . '/../../clases/ParticipanteJunta.php';
 
 // Verificar autenticación e inactividad
 verificarAutenticacion();

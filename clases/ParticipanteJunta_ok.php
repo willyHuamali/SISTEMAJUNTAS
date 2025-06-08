@@ -6,8 +6,6 @@ class ParticipanteJunta {
     public function __construct($db) {
         $this->conn = $db;
     }
-
-    // Método unificado para verificar participantes
     public function verificarParticipante($juntaId, $usuarioId) {
         $query = "SELECT COUNT(*) as count FROM {$this->table} 
                  WHERE JuntaID = :juntaId AND UsuarioID = :usuarioId AND Activo = 1";
@@ -26,53 +24,47 @@ class ParticipanteJunta {
 
             // 1. Verificar si el usuario ya está en la junta
             if ($this->verificarParticipante($juntaId, $usuarioId)) {
-                $usuarioInfo = $this->obtenerInfoUsuario($usuarioId);
-                throw new Exception("El usuario {$usuarioInfo['Nombre']} {$usuarioInfo['Apellido']} (DNI: {$usuarioInfo['DNI']}) ya es participante de esta junta");
+                throw new Exception("El usuario ya es participante de esta junta");
             }
 
             // 2. Verificar que el orden no esté ocupado
-            $query = "SELECT u.Nombre, u.Apellido, u.DNI FROM {$this->table} pj
-                    JOIN Usuarios u ON pj.UsuarioID = u.UsuarioID
-                    WHERE pj.JuntaID = :juntaId AND pj.OrdenRecepcion = :orden";
+            $query = "SELECT COUNT(*) as count FROM {$this->table} 
+                     WHERE JuntaID = :juntaId AND OrdenRecepcion = :orden AND Activo = 1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':juntaId', $juntaId);
             $stmt->bindParam(':orden', $orden);
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            if ($result) {
-                throw new Exception("El orden $orden ya está ocupado por {$result['Nombre']} {$result['Apellido']} (DNI: {$result['DNI']})");
+            if ($result['count'] > 0) {
+                throw new Exception("El orden de recepción ya está ocupado");
             }
 
-            // 3. Verificar cuenta bancaria principal
-            $query = "SELECT c.CuentaID, c.NumeroCuenta, c.Banco 
-                    FROM CuentasBancarias c
-                    WHERE c.UsuarioID = :usuarioId AND c.EsPrincipal = 1 AND c.Activa = 1";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':usuarioId', $usuarioId);
-            $stmt->execute();
-            $cuentaPrincipal = $stmt->fetch(PDO::FETCH_ASSOC);
+            // 3. Obtener cuenta bancaria principal del usuario
+            $cuentaQuery = "SELECT CuentaID FROM CuentasBancarias 
+                          WHERE UsuarioID = :usuarioId AND EsPrincipal = 1 LIMIT 1";
+            $cuentaStmt = $this->conn->prepare($cuentaQuery);
+            $cuentaStmt->bindParam(':usuarioId', $usuarioId);
+            $cuentaStmt->execute();
+            $cuenta = $cuentaStmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$cuentaPrincipal) {
-                $usuarioInfo = $this->obtenerInfoUsuario($usuarioId);
-                throw new Exception("El usuario {$usuarioInfo['Nombre']} {$usuarioInfo['Apellido']} no tiene una cuenta bancaria principal activa registrada");
+            if (!$cuenta) {
+                throw new Exception("El usuario no tiene una cuenta bancaria principal registrada");
             }
 
             // 4. Insertar el nuevo participante
             $insertQuery = "INSERT INTO {$this->table} 
-                        (JuntaID, UsuarioID, OrdenRecepcion, CuentaID, FechaRegistro) 
-                        VALUES (:juntaId, :usuarioId, :orden, :cuentaId, NOW())";
+                          (JuntaID, UsuarioID, OrdenRecepcion, CuentaID, FechaRegistro) 
+                          VALUES (:juntaId, :usuarioId, :orden, :cuentaId, NOW())";
             
             $insertStmt = $this->conn->prepare($insertQuery);
             $insertStmt->bindParam(':juntaId', $juntaId);
             $insertStmt->bindParam(':usuarioId', $usuarioId);
             $insertStmt->bindParam(':orden', $orden);
-            $insertStmt->bindParam(':cuentaId', $cuentaPrincipal['CuentaID']);
+            $insertStmt->bindParam(':cuentaId', $cuenta['CuentaID']);
             
-            $resultado = $insertStmt->execute();
-            
-            if (!$resultado) {
-                throw new Exception("Error al ejecutar la inserción: " . implode(", ", $insertStmt->errorInfo()));
+            if (!$insertStmt->execute()) {
+                throw new Exception("Error al ejecutar la inserción");
             }
 
             $this->conn->commit();
@@ -80,19 +72,11 @@ class ParticipanteJunta {
         } catch (Exception $e) {
             $this->conn->rollBack();
             error_log("Error en agregarParticipante: " . $e->getMessage());
-            throw $e; // Re-lanzamos la excepción para manejo en el controlador
+            return false;
         }
     }
 
-    private function obtenerInfoUsuario($usuarioId) {
-        $query = "SELECT Nombre, Apellido, DNI FROM Usuarios WHERE UsuarioID = :usuarioId";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':usuarioId', $usuarioId);
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    // Método único para obtener juntas activas
+    // Método para obtener juntas activas
     public function obtenerJuntasActivas() {
         $query = "SELECT JuntaID, NombreJunta FROM Juntas 
                  WHERE Estado = 'Activa' ORDER BY NombreJunta";
@@ -101,6 +85,21 @@ class ParticipanteJunta {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Verificar si un usuario es participante de una junta
+    public function esParticipante($juntaId, $usuarioId) {
+        $query = "SELECT COUNT(*) as count FROM {$this->table} 
+                  WHERE JuntaID = :juntaId AND UsuarioID = :usuarioId AND Activo = 1";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':juntaId', $juntaId);
+        $stmt->bindParam(':usuarioId', $usuarioId);
+        $stmt->execute();
+        
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado['count'] > 0;
+    }
+
+    
     // Eliminar un participante de la junta (marcar como inactivo)
     public function eliminarParticipante($participanteId) {
         try {
@@ -147,7 +146,7 @@ class ParticipanteJunta {
         }
     }
 
-    // Obtener participantes por junta
+    // Agregar este método a la clase ParticipanteJunta
     public function obtenerParticipantesPorJunta($juntaId) {
         $query = "SELECT p.*, u.Nombre, u.Apellido, u.Email, u.DNI, u.Telefono 
                 FROM {$this->table} p
@@ -162,7 +161,7 @@ class ParticipanteJunta {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Obtener información de una junta específica
+    // Y este método para obtener información de la junta
     public function obtenerJuntaPorId($juntaId) {
         $query = "SELECT * FROM Juntas WHERE JuntaID = :juntaId";
         $stmt = $this->conn->prepare($query);
@@ -219,7 +218,7 @@ class ParticipanteJunta {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
+     /**
      * Cuenta el total de participantes con los mismos filtros
      */
     public function contarParticipantesFiltrados($juntaId = '', $usuario = '', $estado = '') {
@@ -256,4 +255,34 @@ class ParticipanteJunta {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result['total'];
     }
+
+    /**
+     * Obtiene todas las juntas activas para los filtros
+     */
+    /**
+     * Obtiene todas las juntas activas para los filtros
+     */
+    public function obtenerJuntasActivas() {
+        $query = "SELECT JuntaID, NombreJunta FROM Juntas WHERE Estado = 'Activa' ORDER BY NombreJunta";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    /**
+     * verifica participantes para la asignacion en una junta
+     */
+    public function verificarParticipante($juntaId, $usuarioId) {
+        $query = "SELECT COUNT(*) as count FROM participantesjuntas 
+                WHERE JuntaID = :juntaId AND UsuarioID = :usuarioId";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':juntaId', $juntaId);
+        $stmt->bindParam(':usuarioId', $usuarioId);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'] > 0;
+    }
+    // Agregar un nuevo participante a la junta
+
+
 }

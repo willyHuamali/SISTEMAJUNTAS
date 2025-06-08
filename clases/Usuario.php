@@ -242,17 +242,50 @@ class Usuario {
     }
 
     public function obtenerUsuariosDisponiblesParaJunta($juntaId) {
-    $query = "SELECT u.UsuarioID, u.Nombre, u.Apellido, u.Email 
-              FROM Usuarios u
-              WHERE u.Activo = 1 AND u.UsuarioID NOT IN (
-                  SELECT pj.UsuarioID FROM ParticipantesJuntas pj 
-                  WHERE pj.JuntaID = :juntaId AND pj.Activo = 1
-              )";
-    
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':juntaId', $juntaId);
-    $stmt->execute();
-    
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+        $query = "SELECT u.UsuarioID, u.Nombre, u.Apellido, u.Email 
+                FROM Usuarios u
+                WHERE u.Activo = 1 AND u.UsuarioID NOT IN (
+                    SELECT pj.UsuarioID FROM ParticipantesJuntas pj 
+                    WHERE pj.JuntaID = :juntaId AND pj.Activo = 1
+                )";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':juntaId', $juntaId);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function obtenerUsuariosNoEnJunta($juntaId) {
+        $query = "SELECT u.* FROM usuarios u 
+                WHERE u.Activo = 1 
+                AND u.UsuarioID NOT IN (
+                    SELECT pj.UsuarioID FROM participantesjuntas pj 
+                    WHERE pj.JuntaID = :juntaId
+                )";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':juntaId', $juntaId);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerUsuariosNoEnJuntaConCuenta($juntaId) {
+        $query = "SELECT DISTINCT u.UsuarioID, u.Nombre, u.Apellido, u.DNI 
+                FROM Usuarios u
+                JOIN CuentasBancarias c ON u.UsuarioID = c.UsuarioID
+                WHERE u.UsuarioID NOT IN (
+                    SELECT UsuarioID FROM ParticipantesJuntas 
+                    WHERE JuntaID = :juntaId AND Activo = 1
+                )
+                AND c.EsPrincipal = 1
+                AND c.Activa = 1
+                AND u.Activo = 1
+                ORDER BY u.Nombre, u.Apellido";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':juntaId', $juntaId);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 }
