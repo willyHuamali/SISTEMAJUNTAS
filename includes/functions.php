@@ -188,5 +188,76 @@ function mostrarMensajes() {
     $mensajeFlash = mostrarMensajeFlash();
     if ($mensajeFlash) {
         echo '<div class="alert alert-'.$mensajeFlash['type'].'">'.$mensajeFlash['text'].'</div>';
-    }
+    }    
+
 }
+
+    /**
+     * Formatea un valor numérico como moneda
+     * @param float $valor Valor a formatear
+     * @param string $moneda Símbolo de moneda (por defecto 'S/')
+     * @param int $decimales Número de decimales (por defecto 2)
+     * @return string Valor formateado como moneda
+     */
+    function formatoMoneda($valor, $moneda = 'S/', $decimales = 2) {
+        return $moneda . ' ' . number_format((float)$valor, $decimales, '.', ',');
+    }
+
+    /**
+     * Formatea una fecha para mostrarla de manera legible
+     * @param string $fecha Fecha en formato de base de datos (YYYY-MM-DD HH:MM:SS)
+     * @param string $formato Formato de salida (por defecto 'd/m/Y H:i')
+     * @return string Fecha formateada
+     */
+    function formatoFecha($fecha, $formato = 'd/m/Y H:i') {
+        if (empty($fecha) || $fecha == '0000-00-00 00:00:00') {
+            return 'N/A';
+        }
+        $dateTime = new DateTime($fecha);
+        return $dateTime->format($formato);
+    }
+
+    /**
+    *  PARA procesar_garantia.php
+    */
+    function registrarTransaccion($db, $descripcion, $tablaReferencia, $referenciaId, $monto = 0, $usuarioId = null, $juntaId = null) {
+        try {
+            $query = "INSERT INTO Transacciones (
+                        TipoTransaccion, 
+                        ReferenciaID, 
+                        TablaReferencia, 
+                        Monto, 
+                        Moneda, 
+                        FechaTransaccion, 
+                        Descripcion, 
+                        UsuarioID, 
+                        JuntaID, 
+                        Estado
+                    ) VALUES (
+                        :tipoTransaccion,
+                        :referenciaId,
+                        :tablaReferencia,
+                        :monto,
+                        'PEN',
+                        NOW(),
+                        :descripcion,
+                        :usuarioId,
+                        :juntaId,
+                        'Completada'
+                    )";
+            
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':tipoTransaccion', $descripcion, PDO::PARAM_STR);
+            $stmt->bindParam(':referenciaId', $referenciaId, PDO::PARAM_INT);
+            $stmt->bindParam(':tablaReferencia', $tablaReferencia, PDO::PARAM_STR);
+            $stmt->bindParam(':monto', $monto);
+            $stmt->bindParam(':descripcion', $descripcion, PDO::PARAM_STR);
+            $stmt->bindParam(':usuarioId', $usuarioId, PDO::PARAM_INT);
+            $stmt->bindParam(':juntaId', $juntaId, PDO::PARAM_INT);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error al registrar transacción: " . $e->getMessage());
+            return false;
+        }
+    }

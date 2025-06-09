@@ -1,10 +1,25 @@
 <?php
-require_once '../includes/config.php';
-require_once '../includes/auth.php';
-require_once '../includes/functions.php';
+require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../clases/AuthHelper.php';
 
-// Verificar permisos
-if (!tienePermiso('garantias.add')) {
+// Verificar autenticación e inactividad
+verificarAutenticacion();
+verificarInactividad();
+
+// Inicializar Database y AuthHelper
+$database = new Database();
+$db = $database->getConnection();
+$authHelper = new \Clases\AuthHelper($db);
+
+// Obtener ID de usuario y rol de la sesión
+$usuarioId = $_SESSION['usuario_id'] ?? null;
+$rolId = $_SESSION['rol_id'] ?? null;
+
+// Verificar permisos - CORRECCIÓN: Usar $authHelper->tienePermiso()
+if (!$authHelper->tienePermiso('garantias.add', $rolId)) {
     header('Location: index_garantia.php?error=permisos');
     exit();
 }

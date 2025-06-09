@@ -79,4 +79,6 @@ class AuthHelper {
         
         return $stmt->fetchColumn() > 0;
     }
+
+    
 }

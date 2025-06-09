@@ -243,19 +243,23 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="<?php echo url('perfil.php'); ?>"><i class="fas fa-user me-2"></i>Mi Perfil</a></li>
-                            
-                            <?php if($authHelper->tienePermiso('guarantees.view', $rolUsuario)): ?>
-                                <li><a class="dropdown-item" href="<?php echo url('garantias.php'); ?>"><i class="fas fa-file-contract me-2"></i>Mis Garantías</a></li>
-                            <?php endif; ?>
-                         
+                                        
                             <?php if($authHelper->tienePermiso('cuentas.view_own', $rolUsuario)): ?>
                                 <li><a class="dropdown-item" href="<?php echo url('cuentas/index_cuenta.php'); ?>"><i class="fas fa-piggy-bank me-2"></i>Mis Cuentas</a></li>
+                            <?php endif; ?>
+
+                            <?php if($authHelper->tienePermiso('garantias.view_own', $rolUsuario)): ?>
+                                <li><a class="dropdown-item" href="<?php echo url('garantias/index_garantia.php'); ?>"><i class="fas fa-file-contract me-2"></i>Mis Garantías</a></li>
                             <?php endif; ?>
 
                             <?php if($authHelper->tienePermiso('cuentas.manage', $rolUsuario)): ?>
                                 <li><a class="dropdown-item" href="<?php echo url('cuentas/gestionar_cuenta.php'); ?>"><i class="fas fa-university me-2"></i>Gestionar Cuentas</a></li>
                             <?php endif; ?>
-                            
+
+                            <?php if($authHelper->tienePermiso('garantias.manage', $rolUsuario)): ?>
+                                <li><a class="dropdown-item" href="<?php echo url('garantias/gestionar_garantia.php'); ?>"><i class="fas fa-file-signature me-2"></i>Gestionar Garantías</a></li>
+                            <?php endif; ?>
+                        
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="<?php echo url('logout.php'); ?>"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</a></li>
                         </ul>
