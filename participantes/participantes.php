@@ -187,7 +187,7 @@ include __DIR__ . '/../includes/navbar.php';
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                             <?php endif; ?>
-                                            <?php if ($authHelper->tienePermiso('participantesjuntas.manage_guarantees', $_SESSION['rol_id']) && $participante['GarantiaID']): ?>
+                                            <?php if ($authHelper->tienePermiso('participantesjuntas.manage_guarantees', $_SESSION['rol_id']) && !empty($participante['GarantiaID'])): ?>
                                                 <a href="<?php echo url('participantes/garantias.php?id=' . $participante['GarantiaID']); ?>" 
                                                 class="btn btn-sm btn-primary" title="Ver garantía">
                                                     <i class="fas fa-file-contract"></i>

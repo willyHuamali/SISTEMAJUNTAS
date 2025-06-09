@@ -244,14 +244,17 @@ class Junta {
     }
 
     // Obtener participantes de una junta
-   public function obtenerParticipantes($juntaId) {
+    public function obtenerParticipantes($juntaId) {
         try {
-            $query = "SELECT u.UsuarioID, u.NombreCompleto, u.CorreoElectronico, u.Telefono,
-                            pj.Posicion, pj.EstadoParticipacion, pj.FechaCreacion
-                    FROM participantes_junta pj
-                    JOIN usuarios u ON pj.UsuarioID = u.UsuarioID
-                    WHERE pj.JuntaID = :juntaId AND pj.EstadoParticipacion = 'Activo'
-                    ORDER BY pj.Posicion ASC";
+            $query = "SELECT u.UsuarioID, CONCAT(u.Nombre, ' ', u.Apellido) AS NombreCompleto, 
+                            u.Email AS CorreoElectronico, u.Telefono,
+                            pj.OrdenRecepcion AS Posicion, 
+                            CASE WHEN pj.Activo = 1 THEN 'Activo' ELSE 'Inactivo' END AS EstadoParticipacion, 
+                            pj.FechaRegistro AS FechaCreacion
+                    FROM ParticipantesJuntas pj
+                    JOIN Usuarios u ON pj.UsuarioID = u.UsuarioID
+                    WHERE pj.JuntaID = :juntaId
+                    ORDER BY pj.OrdenRecepcion ASC";
             
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':juntaId', $juntaId);

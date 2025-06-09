@@ -73,7 +73,7 @@ require_once 'includes/navbar.php';
                         <div class="card-body">
                             <h5 class="card-title">Juntas Activas</h5>
                             <p class="card-text display-4"><?= $estadisticas['juntas_activas'] ?></p>
-                            <a href="misjuntas.php" class="text-white small">Ver mis juntas</a>
+                            <a href="<?php echo url('juntas/misjuntas.php'); ?>" class="text-white small">Ver mis juntas</a>
                         </div>
                     </div>
                 </div>

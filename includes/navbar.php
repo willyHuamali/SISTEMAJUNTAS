@@ -247,9 +247,13 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
                             <?php if($authHelper->tienePermiso('guarantees.view', $rolUsuario)): ?>
                                 <li><a class="dropdown-item" href="<?php echo url('garantias.php'); ?>"><i class="fas fa-file-contract me-2"></i>Mis Garantías</a></li>
                             <?php endif; ?>
-                            
-                            <?php if($authHelper->tienePermiso('accounts.view', $rolUsuario)): ?>
-                                <li><a class="dropdown-item" href="<?php echo url('cuentas/'); ?>"><i class="fas fa-piggy-bank me-2"></i>Mis Cuentas</a></li>
+                         
+                            <?php if($authHelper->tienePermiso('cuentas.view_own', $rolUsuario)): ?>
+                                <li><a class="dropdown-item" href="<?php echo url('cuentas/index_cuenta.php'); ?>"><i class="fas fa-piggy-bank me-2"></i>Mis Cuentas</a></li>
+                            <?php endif; ?>
+
+                            <?php if($authHelper->tienePermiso('cuentas.manage', $rolUsuario)): ?>
+                                <li><a class="dropdown-item" href="<?php echo url('cuentas/gestionar_cuenta.php'); ?>"><i class="fas fa-university me-2"></i>Gestionar Cuentas</a></li>
                             <?php endif; ?>
                             
                             <li><hr class="dropdown-divider"></li>

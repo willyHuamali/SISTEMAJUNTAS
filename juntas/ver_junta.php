@@ -134,7 +134,7 @@ require_once '../includes/navbar.php';
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Participantes:</span>
-                            <strong><?= count($participantes) ?> / <?= count($participantes) ?></strong>
+                            <strong><?= count($participantes) ?> / <?= htmlspecialchars($juntaDetalle['MaximoParticipantes']) ?></strong>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Fecha de inicio:</span>

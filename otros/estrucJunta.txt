@@ -8,12 +8,20 @@
 │   └── img/
 │
 ├── cuentas/
-│   ├── index.php          # Listado de cuentas del usuario
-│   ├── agregar.php        # Formulario para agregar nueva cuenta
-│   ├── editar.php         # Formulario para editar cuenta existente
-│   ├── eliminar.php       # Proceso para eliminar cuenta
-│   ├── gestionar.php      # Vista de administrador para gestionar todas las cuentas
-│   └── procesar.php       # Procesamiento de formularios (agregar/editar)
+│   ├── index_cuenta.php          # Listado de cuentas del usuario
+│   ├── agregar_cuenta.php        # Formulario para agregar nueva cuenta
+│   ├── editar_cuenta.php         # Formulario para editar cuenta existente
+│   ├── procesar_cuenta.php       # Procesamiento de formularios (agregar/editar)
+│   ├── gestionar_cuenta.php      # Vista de administrador para gestionar todas las cuentas
+│   └── procesar_cuenta.php       # Procesamiento de formularios (agregar/editar)
+│
+├── garantias/
+│   ├── index_garantia.php          # Listado de garantias del usuario
+│   ├── agregar_garantia.php        # Formulario para agregar nueva garantia
+│   ├── editar_garantia.php         # Formulario para editar garantia existente
+│   ├── procesar_garantia.php       # Procesamiento de formularios (agregar/editar)
+│   ├── ver_garantia.php            # Vista detallada de una garantia
+│   ├── gestionar_garantia.php      # administrador para gestionar todas las garantias
 │
 ├── includes/
 │   ├── config.php

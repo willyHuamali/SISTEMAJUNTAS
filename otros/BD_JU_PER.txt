@@ -488,3 +488,279 @@ AND NOT EXISTS (
     SELECT 1 FROM Roles_Permisos rp 
     WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
 );
+
+-- 3. Actualizamos permisos existentes para mantener consistencia:
+-- Actualizar permisos existentes relacionados con participantes
+UPDATE Permisos 
+SET Descripcion = 'Permite ver el listado de participantes en juntas (permiso básico)'
+WHERE Codigo = 'participants.view';
+
+-- Si existe el permiso antiguo 'participants.manage', actualizarlo
+UPDATE Permisos 
+SET NombrePermiso = 'Gestionar Participantes (Legado)',
+    Descripcion = 'Permiso legado para gestionar participantes (usar participantesjuntas.manage)',
+    Codigo = 'participants.manage_legacy'
+WHERE Codigo = 'participants.manage';
+----- PERMISOS PARA CUENTAS
+
+--1 Insertar nuevos permisos para el módulo de cuentas bancarias
+INSERT INTO Permisos (NombrePermiso, Descripcion, Codigo)
+SELECT * FROM (
+    -- Permiso para ver listado de cuentas propias
+    SELECT 'Ver Mis Cuentas', 
+           'Ver el listado de cuentas bancarias propias', 
+           'cuentas.view_own' AS Codigo
+    
+    UNION SELECT 'Ver Todas las Cuentas', 
+           'Ver el listado completo de cuentas bancarias de todos los usuarios', 
+           'cuentas.view_all'
+    
+    UNION SELECT 'Agregar Cuenta', 
+           'Agregar nuevas cuentas bancarias', 
+           'cuentas.add'
+    
+    UNION SELECT 'Editar Cuenta', 
+           'Modificar cuentas bancarias existentes', 
+           'cuentas.edit'
+    
+    UNION SELECT 'Eliminar Cuenta', 
+           'Eliminar cuentas bancarias', 
+           'cuentas.delete'
+    
+    UNION SELECT 'Gestionar Cuentas', 
+           'Administrar completamente las cuentas bancarias (incluye todas las operaciones)', 
+           'cuentas.manage'
+    
+    UNION SELECT 'Exportar Cuentas', 
+           'Exportar el listado de cuentas bancarias', 
+           'cuentas.export'
+) AS nuevos_permisos
+WHERE NOT EXISTS (
+    SELECT 1 FROM Permisos WHERE Codigo = nuevos_permisos.Codigo
+);
+
+----------------------------------------------------------------------------
+-- 2 Asignar TODOS los permisos de cuentas al Administrador
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Administrador' 
+AND p.Codigo LIKE 'cuentas.%'
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Asignar TODOS los permisos de cuentas al Coordinador
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Coordinador' 
+AND p.Codigo LIKE 'cuentas.%'
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Asignar permisos básicos al Participante (solo ver y gestionar sus propias cuentas)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Participante' 
+AND p.Codigo IN ('cuentas.view_own', 'cuentas.add', 'cuentas.edit', 'cuentas.delete')
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Asignar permisos de solo lectura al Cobrador
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Cobrador' 
+AND p.Codigo IN ('cuentas.view_all')
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Asignar permisos de solo lectura al Auditor
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Auditor' 
+AND p.Codigo IN ('cuentas.view_all')
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+----------------------------------------------------------------------
+-- 3 Actualizar permisos existentes relacionados con cuentas si usan códigos diferentes
+UPDATE Permisos 
+SET NombrePermiso = 'Ver Cuentas Bancarias (Legado)',
+    Descripcion = 'Permiso legado para ver cuentas (usar cuentas.view_own o cuentas.view_all)',
+    Codigo = 'accounts.view_legacy'
+WHERE Codigo = 'accounts.view';
+
+UPDATE Permisos 
+SET NombrePermiso = 'Gestionar Cuentas Bancarias (Legado)',
+    Descripcion = 'Permiso legado para gestionar cuentas (usar cuentas.manage)',
+    Codigo = 'accounts.manage_legacy'
+WHERE Codigo = 'accounts.manage';
+
+UPDATE Permisos 
+SET NombrePermiso = 'Gestionar Todas las Cuentas (Legado)',
+    Descripcion = 'Permiso legado para gestionar todas las cuentas (usar cuentas.manage)',
+    Codigo = 'accounts.manage_all_legacy'
+WHERE Codigo = 'accounts.manage_all';
+
+----------------------------------------------------------------
+-- cuantro: actualizar campos en las CuentasBancarias 
+ALTER TABLE CuentasBancarias MODIFY EsPrincipal TINYINT(1) DEFAULT 0;
+ALTER TABLE CuentasBancarias MODIFY Activa TINYINT(1) DEFAULT 1;
+
+--- ACTUALIZAR PERMISOS PARA GARANTIAS
+-- 1. Primero actualizar los permisos existentes si tienen códigos diferentes
+UPDATE Permisos 
+SET Codigo = 'garantias.manage',
+    Descripcion = 'Administrar completamente las garantías (incluye todas las operaciones)'
+WHERE NombrePermiso = 'Gestionar Garantías' AND Codigo != 'garantias.manage';
+
+UPDATE Permisos 
+SET Codigo = 'garantias.view',
+    Descripcion = 'Ver información de garantías'
+WHERE NombrePermiso = 'Ver Garantías' AND Codigo != 'garantias.view';
+
+-- 2. Insertar solo los permisos que no existen (verificando por nombre y código)
+INSERT INTO Permisos (NombrePermiso, Descripcion, Codigo)
+SELECT * FROM (
+    SELECT 'Ver Mis Garantías' AS NombrePermiso, 
+           'Ver el listado de garantías propias' AS Descripcion, 
+           'garantias.view_own' AS Codigo
+    
+    UNION SELECT 'Ver Todas las Garantías', 
+           'Ver el listado completo de garantías de todos los usuarios', 
+           'garantias.view_all'
+    
+    UNION SELECT 'Agregar Garantía', 
+           'Agregar nuevas garantías', 
+           'garantias.add'
+    
+    UNION SELECT 'Editar Garantía', 
+           'Modificar garantías existentes', 
+           'garantias.edit'
+    
+    UNION SELECT 'Eliminar Garantía', 
+           'Eliminar garantías', 
+           'garantias.delete'
+    
+    UNION SELECT 'Aprobar Garantías', 
+           'Aprobar o rechazar garantías pendientes', 
+           'garantias.approve'
+    
+    UNION SELECT 'Ver Detalle Garantía', 
+           'Ver el detalle completo de una garantía', 
+           'garantias.detail'
+    
+    UNION SELECT 'Exportar Garantías', 
+           'Exportar el listado de garantías', 
+           'garantias.export'
+    
+    UNION SELECT 'Gestionar Tipos de Garantía', 
+           'Administrar los tipos de garantía disponibles en el sistema', 
+           'garantias.manage_types'
+) AS nuevos_permisos
+WHERE NOT EXISTS (
+    SELECT 1 FROM Permisos 
+    WHERE Codigo = nuevos_permisos.Codigo 
+    OR NombrePermiso = nuevos_permisos.NombrePermiso
+);
+
+-- 3. Asignar permisos corregidos a roles
+-- Administrador (todos los permisos de garantías)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r
+JOIN Permisos p ON p.Codigo LIKE 'garantias.%'
+WHERE r.NombreRol = 'Administrador'
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Coordinador (gestión completa excepto tipos)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r
+JOIN Permisos p ON p.Codigo IN (
+    'garantias.view_all',
+    'garantias.add',
+    'garantias.edit',
+    'garantias.manage',
+    'garantias.approve',
+    'garantias.detail',
+    'garantias.export'
+)
+WHERE r.NombreRol = 'Coordinador'
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Cobrador (corregido error de sintaxis en códigos)
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r
+JOIN Permisos p ON p.Codigo IN (
+    'garantias.view_all',
+    'garantias.detail',
+    'garantias.approve'
+)
+WHERE r.NombreRol = 'Cobrador'
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Participante
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r
+JOIN Permisos p ON p.Codigo IN (
+    'garantias.view_own',
+    'garantias.add',
+    'garantias.detail'
+)
+WHERE r.NombreRol = 'Participante'
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- Auditor
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r
+JOIN Permisos p ON p.Codigo IN (
+    'garantias.view_all',
+    'garantias.detail'
+)
+WHERE r.NombreRol = 'Auditor'
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- 4. Actualizar permisos legacy
+UPDATE Permisos 
+SET NombrePermiso = 'Gestionar Garantías (Legado)',
+    Descripcion = 'Permiso legado para gestionar garantías (usar garantias.manage)',
+    Codigo = 'guarantees.manage_legacy'
+WHERE Codigo = 'guarantees.manage' AND Codigo != 'garantias.manage';
+
+UPDATE Permisos 
+SET NombrePermiso = 'Ver Garantías (Legado)',
+    Descripcion = 'Permiso legado para ver garantías (usar garantias.view_own o garantias.view_all)',
+    Codigo = 'guarantees.view_legacy'
+WHERE Codigo = 'guarantees.view' AND Codigo != 'garantias.view';
