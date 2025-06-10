@@ -1,10 +1,13 @@
 <?php
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/../clases/Usuario.php';
+require_once __DIR__ . '/../clases/Usuario.php';  // Corregido para apuntar a la carpeta correcta
 require_once __DIR__ . '/../includes/db.php';
+
 
 $database = new Database();
 $usuario = new Usuario($database->getConnection());
+
+// Resto del código...
 
 function verificarAutenticacion() {
     if (!isset($_SESSION['usuario_id'])) {
@@ -44,7 +47,7 @@ function verificarInactividad() {
     
     if (isset($_SESSION['ultimo_actividad']) && (time() - $_SESSION['ultimo_actividad'] > $tiempo_inactividad)) {
         cerrarSesion();
-        header('Location: ' . BASE_URL . 'index.php?timeout=1');
+        header('Location: login.php?timeout=1');
         exit();
     }
     

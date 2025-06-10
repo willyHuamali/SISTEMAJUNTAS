@@ -1,10 +1,11 @@
 <?php
-require_once __DIR__ . '/../../includes/config.php';
-require_once __DIR__ . '/../../includes/auth.php';
-require_once __DIR__ . '/../../includes/functions.php';
-require_once __DIR__ . '/../../includes/db.php';
-require_once __DIR__ . '/../../clases/AuthHelper.php';
-require_once __DIR__ . '/../../clases/ParticipanteJunta.php';
+require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../clases/AuthHelper.php';
+require_once __DIR__ . '/../clases/ParticipanteJunta.php';
+require_once __DIR__ . '/../clases/Usuario.php';
 
 // Verificar autenticación e inactividad
 verificarAutenticacion();
@@ -15,7 +16,8 @@ $database = new Database();
 $db = $database->getConnection();
 $authHelper = new \Clases\AuthHelper($db);
 
-// Verificar permisos
+
+// Verificar permisos para editar participantes
 if (!$authHelper->tienePermiso('participantesjuntas.edit', $_SESSION['rol_id'])) {
     $_SESSION['mensaje_error'] = "No tienes permisos para editar participantes.";
     header('Location: ' . url('participantes/participantes.php'));
@@ -25,49 +27,49 @@ if (!$authHelper->tienePermiso('participantesjuntas.edit', $_SESSION['rol_id']))
 // Obtener ID del participante a editar
 $participanteId = $_GET['id'] ?? 0;
 if (empty($participanteId)) {
-    $_SESSION['mensaje_error'] = "No se especificó el participante a editar.";
+    $_SESSION['mensaje_error'] = "No se especificó el participante.";
     header('Location: ' . url('participantes/participantes.php'));
     exit;
 }
 
-// Crear instancia de ParticipanteJunta
+// Crear instancia de ParticipanteJunta y obtener datos
 $participanteModel = new ParticipanteJunta($db);
-
-// Obtener datos del participante
 $participante = $participanteModel->obtenerParticipantePorId($participanteId);
+
 if (!$participante) {
     $_SESSION['mensaje_error'] = "Participante no encontrado.";
     header('Location: ' . url('participantes/participantes.php'));
     exit;
 }
 
-// Obtener lista de juntas activas
-$juntas = $participanteModel->obtenerJuntasActivas();
+// Obtener listas necesarias
+$juntas = $participanteModel->obtenerJuntasDisponibles();
+$usuarios = $participanteModel->obtenerUsuariosDisponibles();
+$cuentas = $participanteModel->obtenerCuentasDisponibles();
+$garantias = $participanteModel->obtenerGarantiasDisponibles();
 
-// Procesar formulario si se envió
+// Procesar formulario si es POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $juntaId = $_POST['junta_id'] ?? '';
-    $orden = $_POST['orden'] ?? '';
-    $activo = isset($_POST['activo']) ? 1 : 0;
-    
+    $usuarioId = $_POST['usuario_id'] ?? '';
+    $cuentaId = $_POST['cuenta_id'] ?? '';
+    $garantiaId = $_POST['garantia_id'] ?? '';
+    $ordenRecepcion = $_POST['orden_recepcion'] ?? '';
+
     // Validar datos
-    if (empty($juntaId)) {
-        $_SESSION['mensaje_error'] = "Debes seleccionar una junta.";
-    } elseif (empty($orden)) {
-        $_SESSION['mensaje_error'] = "Debes especificar un orden de recepción.";
+    if (empty($juntaId) || empty($usuarioId) || empty($cuentaId) || empty($ordenRecepcion)) {
+        $_SESSION['mensaje_error'] = "Todos los campos obligatorios deben ser completados.";
     } else {
         // Actualizar participante
-        $query = "UPDATE ParticipantesJuntas 
-                  SET JuntaID = :juntaId, OrdenRecepcion = :orden, Activo = :activo
-                  WHERE ParticipanteID = :participanteId";
-        
-        $stmt = $db->prepare($query);
-        $stmt->bindParam(':juntaId', $juntaId);
-        $stmt->bindParam(':orden', $orden);
-        $stmt->bindParam(':activo', $activo);
-        $stmt->bindParam(':participanteId', $participanteId);
-        
-        if ($stmt->execute()) {
+        $datosActualizados = [
+            'JuntaID' => $juntaId,
+            'UsuarioID' => $usuarioId,
+            'CuentaID' => $cuentaId,
+            'GarantiaID' => !empty($garantiaId) ? $garantiaId : null,
+            'OrdenRecepcion' => $ordenRecepcion
+        ];
+
+        if ($participanteModel->actualizarParticipante($participanteId, $datosActualizados)) {
             $_SESSION['mensaje_exito'] = "Participante actualizado correctamente.";
             header('Location: ' . url('participantes/participantes.php'));
             exit;
@@ -77,80 +79,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Título de la página
-$titulo = 'Editar Participante';
-
 // Incluir header
-include __DIR__ . '/../../includes/header.php';
-include __DIR__ . '/../../includes/navbar.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="container-fluid px-4">
-    <h1 class="mt-4"><?php echo $titulo; ?></h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a href="<?php echo url('index.php'); ?>">Inicio</a></li>
-        <li class="breadcrumb-item"><a href="<?php echo url('participantes/participantes.php'); ?>">Participantes</a></li>
-        <li class="breadcrumb-item active"><?php echo $titulo; ?></li>
-    </ol>
-
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-user-edit me-1"></i>
-            <?php echo $titulo; ?>
-        </div>
-        <div class="card-body">
-            <form method="post" action="<?php echo url('participantes/editar_par.php?id=' . $participanteId); ?>">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="junta_id" class="form-label">Junta</label>
-                        <select class="form-select" id="junta_id" name="junta_id" required>
-                            <option value="">Seleccionar Junta</option>
-                            <?php foreach ($juntas as $junta): ?>
-                                <option value="<?php echo htmlspecialchars($junta['JuntaID']); ?>" 
-                                    <?php echo ($junta['JuntaID'] == $participante['JuntaID'] || (isset($_POST['junta_id']) && $_POST['junta_id'] == $junta['JuntaID'])) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($junta['NombreJunta']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <label class="form-label">Usuario</label>
-                        <input type="text" class="form-control" 
-                               value="<?php echo htmlspecialchars($participante['Nombre'] . ' ' . $participante['Apellido'] . ' (' . $participante['DNI'] . ')'); ?>" 
-                               readonly>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <label for="orden" class="form-label">Orden de Recepción</label>
-                        <input type="number" class="form-control" id="orden" name="orden" 
-                               value="<?php echo htmlspecialchars($_POST['orden'] ?? $participante['OrdenRecepcion']); ?>" 
-                               min="1" required>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <div class="form-check form-switch mt-4">
-                            <input class="form-check-input" type="checkbox" id="activo" name="activo" 
-                                   <?php echo (($_POST['activo'] ?? $participante['Activo']) ? 'checked' : ''); ?>>
-                            <label class="form-check-label" for="activo">Activo</label>
-                        </div>
-                    </div>
+<div class="container mt-4">
+    <h2>Editar Participante</h2>
+    
+    <?php mostrarMensajes(); ?>
+    
+    <form method="POST" action="<?= url('participantes/editar_par.php?id=' . $participanteId) ?>">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="junta_id">Junta:</label>
+                    <select class="form-control" id="junta_id" name="junta_id" required>
+                        <option value="">Seleccione una junta</option>
+                        <?php foreach ($juntas as $junta): ?>
+                            <option value="<?= $junta['JuntaID'] ?>" <?= $junta['JuntaID'] == $participante['JuntaID'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($junta['NombreJunta']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i> Guardar Cambios
-                    </button>
-                    <a href="<?php echo url('participantes/participantes.php'); ?>" class="btn btn-secondary">
-                        <i class="fas fa-times me-1"></i> Cancelar
-                    </a>
+                <div class="form-group">
+                    <label for="usuario_id">Usuario:</label>
+                    <select class="form-control" id="usuario_id" name="usuario_id" required>
+                        <option value="">Seleccione un usuario</option>
+                        <?php foreach ($usuarios as $usuario): ?>
+                            <option value="<?= $usuario['UsuarioID'] ?>" <?= $usuario['UsuarioID'] == $participante['UsuarioID'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
-            </form>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="cuenta_id">Cuenta Bancaria:</label>
+                    <select class="form-control" id="cuenta_id" name="cuenta_id" required>
+                        <option value="">Seleccione una cuenta</option>
+                        <?php foreach ($cuentas as $cuenta): ?>
+                            <option value="<?= $cuenta['CuentaID'] ?>" <?= $cuenta['CuentaID'] == $participante['CuentaID'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($cuenta['Banco'] . ' - ' . $cuenta['NumeroCuenta']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="garantia_id">Garantía (Opcional):</label>
+                    <select class="form-control" id="garantia_id" name="garantia_id">
+                        <option value="">Sin garantía</option>
+                        <?php foreach ($garantias as $garantia): ?>
+                            <option value="<?= $garantia['GarantiaID'] ?>" <?= $garantia['GarantiaID'] == $participante['GarantiaID'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($garantia['TipoGarantia'] . ' - ' . $garantia['Descripcion']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
         </div>
-    </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="orden_recepcion">Orden de Recepción:</label>
+                    <input type="number" class="form-control" id="orden_recepcion" name="orden_recepcion" 
+                           value="<?= htmlspecialchars($participante['OrdenRecepcion']) ?>" required min="1">
+                </div>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        <a href="<?= url('participantes/participantes.php') ?>" class="btn btn-secondary">Cancelar</a>
+    </form>
 </div>
 
 <?php
-// Incluir footer
-include __DIR__ . '/../../includes/footer.php';
+require_once __DIR__ . '/../includes/footer.php';
 ?>
