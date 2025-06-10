@@ -24,23 +24,17 @@ if (!$authHelper->tienePermiso('garantias.manage_all', $rolId)) {
     exit();
 }
 
-$tituloPagina = "Gestión Completa de Garantías";
+$tituloPagina = "Gestión de Garantías";
 require_once '../includes/header.php';
 require_once '../includes/navbar.php';
 
-// Mostrar mensaje de éxito si existe
-if (isset($_SESSION['mensaje_exito'])) {
-    echo '<div class="alert alert-'.$_SESSION['mensaje_exito']['tipo'].' alert-dismissible fade show">
-        <strong>'.$_SESSION['mensaje_exito']['titulo'].'</strong> '.$_SESSION['mensaje_exito']['texto'].'
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>';
-    unset($_SESSION['mensaje_exito']);
-}
-
 // Obtener listado de todas las garantías con filtros
-$filtroEstado = $_GET['estado'] ?? '';
+$db = conectarBD();
+
+// Filtros
+$filtroEstado = isset($_GET['estado']) ? $_GET['estado'] : '';
 $filtroUsuario = isset($_GET['usuario']) ? (int)$_GET['usuario'] : 0;
-$filtroTipo = $_GET['tipo'] ?? '';
+$filtroTipo = isset($_GET['tipo']) ? $_GET['tipo'] : '';
 
 // Construir consulta con filtros
 $query = "SELECT g.*, u.Nombre, u.Apellido FROM Garantias g JOIN Usuarios u ON g.UsuarioID = u.UsuarioID WHERE 1=1";
@@ -147,7 +141,6 @@ while ($tipo = $resultTipos->fetch_assoc()) {
                     <div class="col-md-3 d-flex align-items-end">
                         <div class="mb-3 w-100">
                             <button type="submit" class="btn btn-primary w-100">Filtrar</button>
-                            <a href="gestionar_garantia.php" class="btn btn-secondary w-100 mt-2">Limpiar</a>
                         </div>
                     </div>
                 </div>
@@ -195,6 +188,12 @@ while ($tipo = $resultTipos->fetch_assoc()) {
                                     <a href="editar_garantia.php?id=<?php echo $garantia['GarantiaID']; ?>" class="btn btn-sm btn-warning" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    <button class="btn btn-sm btn-danger btn-cambiar-estado" 
+                                            data-id="<?php echo $garantia['GarantiaID']; ?>"
+                                            data-estado="<?php echo $garantia['Estado']; ?>"
+                                            title="Cambiar Estado">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -205,6 +204,85 @@ while ($tipo = $resultTipos->fetch_assoc()) {
         </div>
     </div>
 </div>
+
+<!-- Modal para cambiar estado -->
+<div class="modal fade" id="modalCambiarEstado" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cambiar Estado de Garantía</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formCambiarEstado" method="post" action="procesar_estado_garantia.php">
+                <input type="hidden" name="id" id="garantiaId">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nuevoEstado" class="form-label">Nuevo Estado</label>
+                        <select class="form-select" id="nuevoEstado" name="estado" required>
+                            <option value="Activa">Activa</option>
+                            <option value="Retenida">Retenida</option>
+                            <option value="Liberada">Liberada</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo (Opcional)</label>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Script para manejar el modal de cambio de estado
+document.addEventListener('DOMContentLoaded', function() {
+    const botonesCambiarEstado = document.querySelectorAll('.btn-cambiar-estado');
+    const modalCambiarEstado = new bootstrap.Modal(document.getElementById('modalCambiarEstado'));
+    const formCambiarEstado = document.getElementById('formCambiarEstado');
+    const garantiaIdInput = document.getElementById('garantiaId');
+    const nuevoEstadoSelect = document.getElementById('nuevoEstado');
+    
+    botonesCambiarEstado.forEach(boton => {
+        boton.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const estadoActual = this.getAttribute('data-estado');
+            
+            garantiaIdInput.value = id;
+            nuevoEstadoSelect.value = estadoActual === 'Activa' ? 'Retenida' : 
+                                    estadoActual === 'Retenida' ? 'Liberada' : 'Activa';
+            
+            modalCambiarEstado.show();
+        });
+    });
+    
+    // Manejar envío del formulario
+    formCambiarEstado.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: new FormData(this)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Error al cambiar el estado');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al procesar la solicitud');
+        });
+    });
+});
+</script>
 
 <?php
 require_once '../includes/footer.php';

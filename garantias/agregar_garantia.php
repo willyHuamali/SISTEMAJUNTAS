@@ -70,8 +70,9 @@ $tiposGarantia = [
                     
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="documento" class="form-label">Documento de Garantía (PDF, JPG, PNG)</label>
-                            <input type="file" class="form-control" id="documento" name="documento" accept=".pdf,.jpg,.jpeg,.png">
+                            <label for="documento" class="form-label">Documento de Garantía</label>
+                            <input type="file" class="form-control" id="documento" name="documento" accept=".pdf,.jpg,.jpeg,.png" required>
+                            <div class="form-text">Formatos aceptados: PDF, JPG, PNG. Tamaño máximo: 5MB</div>
                         </div>
                     </div>
                 </div>

@@ -21,7 +21,8 @@
 │   ├── editar_garantia.php         # Formulario para editar garantia existente
 │   ├── procesar_garantia.php       # Procesamiento de formularios (agregar/editar)
 │   ├── ver_garantia.php            # Vista detallada de una garantia
-│   ├── gestionar_garantia.php      # administrador para gestionar todas las garantias
+│   ├── gestionar_garantia.php      # administrador para la gestiona completa todas las garantias 
+│   ├── procesar_estado.php         # Para cambiar estados (activar/cancelar)
 │
 ├── includes/
 │   ├── config.php
@@ -64,7 +65,9 @@
 │       ├── index.php            # Listado de desembolsos
 │       ├── programar.php        # Programar desembolso
 │       └── historial.php        # Historial de desembolsos
-│	
+│
+├── uploads
+│       ├── garantias
 │
 ├── index.php
 ├── login.php

@@ -181,7 +181,7 @@ require_once __DIR__ . '/includes/navbar.php';
                             </div>
                             <?php if ($authHelper->tienePermiso('account.manage', $rolUsuario)): ?>
                                 <div class="text-end">
-                                    <a href="agregar_cuenta.php" class="btn btn-primary btn-sm">
+                                    <a href="<?php echo url('cuentas/agregar_cuenta.php'); ?>" class="btn btn-primary btn-sm">
                                         <i class="fas fa-plus"></i> Agregar Cuenta
                                     </a>
                                 </div>
@@ -190,7 +190,7 @@ require_once __DIR__ . '/includes/navbar.php';
                             <div class="alert alert-info">
                                 No tienes cuentas bancarias registradas.
                                 <?php if ($authHelper->tienePermiso('account.manage', $rolUsuario)): ?>
-                                    <a href="agregar_cuenta.php" class="alert-link">Agrega tu primera cuenta</a>
+                                    <a href="<?php echo url('cuentas/agregar_cuenta.php'); ?>" class="alert-link">Agrega tu primera cuenta</a>
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>
@@ -236,7 +236,7 @@ require_once __DIR__ . '/includes/navbar.php';
                             <div class="alert alert-info">
                                 No tienes garantías registradas.
                                 <?php if ($authHelper->tienePermiso('guarantees.manage', $rolUsuario)): ?>
-                                    <a href="agregar_garantia.php" class="alert-link">Registrar una garantía</a>
+                                    <a href="<?php echo url('garantias/agregar_garantia.php'); ?>"class="alert-link">Registrar una garantía</a>
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>

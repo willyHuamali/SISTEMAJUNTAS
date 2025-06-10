@@ -64,22 +64,29 @@ switch ($accion) {
         $nombreArchivo = null;
         if (isset($_FILES['documento']) && $_FILES['documento']['error'] === UPLOAD_ERR_OK) {
             $archivo = $_FILES['documento'];
-            $extension = pathinfo($archivo['name'], PATHINFO_EXTENSION);
+            $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
             $extensionesPermitidas = ['pdf', 'jpg', 'jpeg', 'png'];
             
-            if (!in_array(strtolower($extension), $extensionesPermitidas)) {
-                $errores[] = "Solo se permiten archivos PDF, JPG, JPEG o PNG";
-            } elseif ($archivo['size'] > 5 * 1024 * 1024) { // 5MB máximo
-                $errores[] = "El archivo no puede ser mayor a 5MB";
+            if (!in_array($extension, $extensionesPermitidas)) {
+                $errores[] = "Tipo de archivo no permitido. Solo se aceptan PDF, JPG, JPEG o PNG";
+            } 
+            elseif ($archivo['size'] > 5 * 1024 * 1024) {
+                $errores[] = "El archivo excede el tamaño máximo de 5MB";
             } else {
-                $nombreArchivo = uniqid() . '.' . $extension;
-                $rutaDestino = '../uploads/garantias/' . $nombreArchivo;
+                $uploadDir = '../uploads/garantias/';
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                $nombreArchivo = uniqid('garantia_') . '.' . $extension;
+                $rutaDestino = $uploadDir . $nombreArchivo;
                 
                 if (!move_uploaded_file($archivo['tmp_name'], $rutaDestino)) {
-                    $errores[] = "Error al subir el archivo";
-                    $nombreArchivo = null;
+                    $errores[] = "Error al subir el documento. Intente nuevamente.";
                 }
             }
+        } else {
+            $errores[] = "Debe adjuntar un documento de garantía";
         }
         
         // Si hay errores, redirigir
@@ -106,7 +113,12 @@ switch ($accion) {
                 // Registrar en transacciones
                 registrarTransaccion($db, 'Garantía agregada', 'Garantias', $garantiaId, $valor, $usuarioId);
                 
-                $_SESSION['mensaje_exito'] = "Garantía agregada correctamente";
+                // Mensaje de éxito mejorado
+                $_SESSION['mensaje_exito'] = [
+                    'titulo' => 'Garantía registrada',
+                    'texto' => 'La garantía se ha registrado correctamente',
+                    'tipo' => 'success'
+                ];
                 header('Location: index_garantia.php');
                 exit();
             } else {
@@ -224,7 +236,12 @@ switch ($accion) {
                 // Registrar en transacciones
                 registrarTransaccion($db, 'Garantía actualizada', 'Garantias', $garantiaId, $valor, $usuarioId);
                 
-                $_SESSION['mensaje_exito'] = "Garantía actualizada correctamente";
+                // Mensaje de éxito mejorado
+                $_SESSION['mensaje_exito'] = [
+                    'titulo' => 'Garantía actualizada',
+                    'texto' => 'Los datos de la garantía se han actualizado correctamente',
+                    'tipo' => 'success'
+                ];
                 header('Location: index_garantia.php');
                 exit();
             } else {

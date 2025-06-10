@@ -114,7 +114,7 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
                                 
                                 <?php if($authHelper->tienePermiso('participantesjuntas.manage_guarantees', $rolUsuario)): ?>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="<?php echo url('participantes/garantias.php'); ?>">
+                                    <li><a class="dropdown-item" href="<?php echo url('garantias/gestionar_garantia.php'); ?>">
                                         <i class="fas fa-file-contract me-2"></i>Gestionar Garantías
                                     </a></li>
                                 <?php endif; ?>
@@ -254,10 +254,6 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
 
                             <?php if($authHelper->tienePermiso('cuentas.manage', $rolUsuario)): ?>
                                 <li><a class="dropdown-item" href="<?php echo url('cuentas/gestionar_cuenta.php'); ?>"><i class="fas fa-university me-2"></i>Gestionar Cuentas</a></li>
-                            <?php endif; ?>
-
-                            <?php if($authHelper->tienePermiso('garantias.manage', $rolUsuario)): ?>
-                                <li><a class="dropdown-item" href="<?php echo url('garantias/gestionar_garantia.php'); ?>"><i class="fas fa-file-signature me-2"></i>Gestionar Garantías</a></li>
                             <?php endif; ?>
                         
                             <li><hr class="dropdown-divider"></li>

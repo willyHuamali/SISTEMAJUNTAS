@@ -1,10 +1,25 @@
 <?php
-require_once '../includes/config.php';
-require_once '../includes/auth.php';
-require_once '../includes/functions.php';
+require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../clases/AuthHelper.php';
+
+// Verificar autenticación e inactividad
+verificarAutenticacion();
+verificarInactividad();
+
+// Inicializar Database y AuthHelper
+$database = new Database();
+$db = $database->getConnection();
+$authHelper = new \Clases\AuthHelper($db);
+
+// Obtener ID de usuario y rol de la sesión
+$usuarioId = $_SESSION['usuario_id'] ?? null;
+$rolId = $_SESSION['rol_id'] ?? null;
 
 // Verificar permisos y parámetros
-if (!tienePermiso('garantias.edit')) {
+if (!$authHelper->tienePermiso('garantias.edit', $rolId)) {
     header('Location: index_garantia.php?error=permisos');
     exit();
 }
@@ -17,16 +32,14 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $garantiaId = (int)$_GET['id'];
 
 // Obtener datos de la garantía
-$db = conectarBD();
 $query = "SELECT * FROM Garantias WHERE GarantiaID = ?";
 $stmt = $db->prepare($query);
-$stmt->bind_param("i", $garantiaId);
+$stmt->bindParam(1, $garantiaId, PDO::PARAM_INT);
 $stmt->execute();
-$resultado = $stmt->get_result();
-$garantia = $resultado->fetch_assoc();
+$garantia = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Verificar existencia y permisos
-if (!$garantia || ($garantia['UsuarioID'] != $_SESSION['usuario_id'] && !tienePermiso('garantias.manage_all'))) {
+if (!$garantia || ($garantia['UsuarioID'] != $_SESSION['usuario_id'] && !$authHelper->tienePermiso('garantias.manage_all', $rolId))) {
     header('Location: index_garantia.php?error=noexiste');
     exit();
 }
@@ -109,7 +122,7 @@ $tiposGarantia = [
                 
                 <div class="mb-3">
                     <label for="estado" class="form-label">Estado</label>
-                    <select class="form-select" id="estado" name="estado" <?php echo !tienePermiso('garantias.manage_all') ? 'disabled' : ''; ?>>
+                    <select class="form-select" id="estado" name="estado" <?php echo !$authHelper->tienePermiso('garantias.manage_all', $rolId) ? 'disabled' : ''; ?>>
                         <option value="Activa" <?php echo $garantia['Estado'] == 'Activa' ? 'selected' : ''; ?>>Activa</option>
                         <option value="Retenida" <?php echo $garantia['Estado'] == 'Retenida' ? 'selected' : ''; ?>>Retenida</option>
                         <option value="Liberada" <?php echo $garantia['Estado'] == 'Liberada' ? 'selected' : ''; ?>>Liberada</option>
