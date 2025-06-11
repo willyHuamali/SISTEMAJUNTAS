@@ -80,5 +80,23 @@ class AuthHelper {
         return $stmt->fetchColumn() > 0;
     }
 
+    public function obtenerPermisosPorRol(int $rolID): array {
+        try {
+            $query = "SELECT p.Codigo 
+                    FROM Roles_Permisos rp
+                    JOIN Permisos p ON rp.PermisoID = p.PermisoID
+                    WHERE rp.RolID = :rolID";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':rolID', $rolID, \PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        } catch (\PDOException $e) {
+            error_log("Error al obtener permisos por rol: " . $e->getMessage());
+            return [];
+        }
+    }
+
     
 }

@@ -764,3 +764,9 @@ SET NombrePermiso = 'Ver Garantías (Legado)',
     Descripcion = 'Permiso legado para ver garantías (usar garantias.view_own o garantias.view_all)',
     Codigo = 'guarantees.view_legacy'
 WHERE Codigo = 'guarantees.view' AND Codigo != 'garantias.view';
+
+-- 10 ACTU PERMISIS JUNTAS
+UPDATE Permisos 
+SET Descripcion = 'Permite asignar y modificar el orden de recepción de fondos para participantes en una junta'
+WHERE Codigo = 'participantesjuntas.assign_order';
+

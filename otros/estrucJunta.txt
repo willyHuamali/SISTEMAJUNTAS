@@ -55,7 +55,7 @@
 │	├── editar_par.php           # Editar participante
 │	├── eliminar_par.php         # Eliminar participante
 │       └── procesar_par.php         # Procesar acciones
-│       └── asignar_order_par.php    # Procesar orden en la junta 
+│       └── asignar_orden_par.php    # Procesar orden en la junta 
 │       └── ver_par.php -            # Para ver detalles completos de un participante
 │       └── historial_par.php        # Historial de actividades del participante (pagos, desembolsos)
 │       └── reportes_par.php         # Reportes específicos de participantes

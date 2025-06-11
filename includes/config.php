@@ -18,8 +18,8 @@ define('DB_CHARSET', 'utf8mb4');
 
 // Configuración de la aplicación
 define('APP_NAME', 'Sistema de Juntas');
-//define('BASE_URL', 'http://localhost/sistemajuntas/');
-define('BASE_URL', 'http://192.168.18.4/sistemajuntas/');
+define('BASE_URL', 'http://localhost/sistemajuntas/');
+//define('BASE_URL', 'http://192.168.18.4/sistemajuntas/');
 
 // Función para assets
 function asset($path) {

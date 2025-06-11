@@ -62,4 +62,23 @@ class AuthHelper {
             return false;
         }
     }
+
+    public function tieneAlgunPermiso(array $permisos, $rolId) {
+        if (empty($permisos)) {
+            return false;
+        }
+        
+        $placeholders = implode(',', array_fill(0, count($permisos), '?'));
+        $query = "SELECT COUNT(*) FROM Roles_Permisos rp
+                JOIN Permisos p ON rp.PermisoID = p.PermisoID
+                WHERE rp.RolID = ? AND p.Codigo IN ($placeholders)";
+        
+        $stmt = $this->db->prepare($query);  // Cambiado de $this->conn a $this->db
+        $params = array_merge([$rolId], $permisos);
+        $stmt->execute($params);
+        
+        return $stmt->fetchColumn() > 0;
+    }
+
+    
 }

@@ -182,7 +182,7 @@ include __DIR__ . '/../includes/navbar.php';
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             <?php if ($authHelper->tienePermiso('participantesjuntas.edit', $_SESSION['rol_id'])): ?>
-                                                <a href="<?php echo url('participantes/editar.php?id=' . $participante['ParticipanteID']); ?>" 
+                                                <a href="<?php echo url('participantes/editar_par.php?id=' . $participante['ParticipanteID']); ?>" 
                                                 class="btn btn-sm btn-warning" title="Editar">
                                                     <i class="fas fa-edit"></i>
                                                 </a>

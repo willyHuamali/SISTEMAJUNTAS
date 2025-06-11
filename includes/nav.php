@@ -107,7 +107,7 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
                                 
                                 <?php if($authHelper->tienePermiso('participantesjuntas.assign_order', $rolUsuario)): ?>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="<?php echo url('participantes/asignar_order_par.php'); ?>">
+                                    <li><a class="dropdown-item" href="<?php echo url('participantes/asignar_orden_par.php'); ?>">
                                         <i class="fas fa-sort-numeric-down me-2"></i>Asignar Orden
                                     </a></li>
                                 <?php endif; ?>

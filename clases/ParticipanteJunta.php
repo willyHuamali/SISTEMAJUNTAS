@@ -256,4 +256,56 @@ class ParticipanteJunta {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result['total'];
     }
+
+    // Agrega este método a la clase ParticipanteJunta
+    public function obtenerParticipantePorId($participanteId) {
+        $query = "SELECT pj.*, u.Nombre, u.Apellido, u.DNI, j.NombreJunta 
+                FROM {$this->table} pj
+                JOIN Usuarios u ON pj.UsuarioID = u.UsuarioID
+                JOIN Juntas j ON pj.JuntaID = j.JuntaID
+                WHERE pj.ParticipanteID = :participanteId";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':participanteId', $participanteId);
+        $stmt->execute();
+        
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // También necesitarás el método actualizarParticipante que se usa en el formulario
+    public function actualizarParticipante($datos) {
+        $query = "UPDATE {$this->table} 
+                SET CuentaID = :cuentaId, 
+                    GarantiaID = :garantiaId, 
+                    OrdenRecepcion = :ordenRecepcion, 
+                    Activo = :activo
+                WHERE ParticipanteID = :participanteId";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':cuentaId', $datos['CuentaID']);
+        $stmt->bindParam(':garantiaId', $datos['GarantiaID']);
+        $stmt->bindParam(':ordenRecepcion', $datos['OrdenRecepcion']);
+        $stmt->bindParam(':activo', $datos['Activo']);
+        $stmt->bindParam(':participanteId', $datos['ParticipanteID']);
+        
+        return $stmt->execute();
+    }
+
+    /**
+     * Actualiza el orden de recepción de un participante
+     * @param int $participanteId ID del participante
+     * @param int $orden Nuevo orden de recepción
+     * @return bool True si la actualización fue exitosa
+     */
+    public function actualizarOrdenRecepcion($participanteId, $orden) {
+        $query = "UPDATE ParticipantesJuntas 
+                SET OrdenRecepcion = :orden 
+                WHERE ParticipanteID = :participanteId";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':orden', $orden);
+        $stmt->bindParam(':participanteId', $participanteId);
+        
+        return $stmt->execute();
+    }
 }
