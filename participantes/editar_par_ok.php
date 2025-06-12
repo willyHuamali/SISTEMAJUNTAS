@@ -6,9 +6,9 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../clases/AuthHelper.php';
 require_once __DIR__ . '/../clases/ParticipanteJunta.php';
 require_once __DIR__ . '/../clases/Junta.php';
-require_once __DIR__ . '/../clases/CuentaBancaria.php';
-require_once __DIR__ . '/../clases/Garantia.php';
-require_once __DIR__ . '/../clases/Usuario.php';
+require_once __DIR__ . '/../clases/CuentaBancaria.php'; // Nueva línea añadida
+require_once __DIR__ . '/../clases/Garantia.php';      // Probablemente necesaria
+require_once __DIR__ . '/../clases/Usuario.php';       // Probablemente necesaria
 
 // Verificar autenticación e inactividad
 verificarAutenticacion();
@@ -57,12 +57,6 @@ $cuentas = $cuentaModel->obtenerCuentasPorUsuario($participante['UsuarioID']);
 
 $garantiaModel = new Garantia($db);
 $garantias = $garantiaModel->obtenerGarantiasPorUsuario($participante['UsuarioID']);
-
-// Obtener información de números asignados/libres
-$infoNumeros = $participanteModel->obtenerInfoNumerosJunta($participante['JuntaID']);
-$numerosAsignados = $infoNumeros['asignados'];
-$numerosLibres = $infoNumeros['libres'];
-$maxParticipantes = $infoNumeros['maximo'];
 
 // Procesar formulario si es POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -141,50 +135,6 @@ include __DIR__ . '/../includes/navbar.php';
                     <label for="orden_recepcion" class="form-label">Orden de Recepción *</label>
                     <input type="number" class="form-control" id="orden_recepcion" name="orden_recepcion" 
                            value="<?= htmlspecialchars($participante['OrdenRecepcion']) ?>" min="1" required>
-                    
-                    <!-- Mostrar números asignados y libres -->
-                    <div class="mt-3">
-                        <h6>Información de Números:</h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card bg-light">
-                                    <div class="card-header bg-info text-white">
-                                        Números Asignados
-                                    </div>
-                                    <div class="card-body">
-                                        <?php if (!empty($numerosAsignados)): ?>
-                                            <?php sort($numerosAsignados); ?>
-                                            <?php echo implode(', ', $numerosAsignados); ?>
-                                        <?php else: ?>
-                                            No hay números asignados aún
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card bg-light">
-                                    <div class="card-header bg-success text-white">
-                                        Números Libres
-                                    </div>
-                                    <div class="card-body">
-                                        <?php if (!empty($numerosLibres)): ?>
-                                            <?php sort($numerosLibres); ?>
-                                            <?php echo implode(', ', $numerosLibres); ?>
-                                        <?php else: ?>
-                                            <?php if ($maxParticipantes > 0): ?>
-                                                No hay números libres (todos asignados)
-                                            <?php else: ?>
-                                                Esta junta no tiene límite de participantes
-                                            <?php endif; ?>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <?php if ($maxParticipantes > 0): ?>
-                            <small class="text-muted">Total participantes: <?php echo count($numerosAsignados); ?> de <?php echo $maxParticipantes; ?></small>
-                        <?php endif; ?>
-                    </div>
                 </div>
                 
                 <div class="mb-3 form-check">

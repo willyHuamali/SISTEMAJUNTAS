@@ -47,10 +47,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['junta_id']) && !isset
     $maxParticipantes = $juntaInfo['MaximoParticipantes'];
     
     // Obtener números ya asignados
-    $infoNumeros = $participanteModel->obtenerInfoNumerosJunta($juntaSeleccionada);
-    $numerosAsignados = $infoNumeros['asignados'];
-    $numerosLibres = $infoNumeros['libres'];
-    $maxParticipantes = $infoNumeros['maximo'];
+    $participantes = $participanteModel->obtenerParticipantesPorJunta($juntaSeleccionada);
+    $numerosAsignados = array_column($participantes, 'OrdenRecepcion');
+    
+    // Calcular números libres
+    if ($maxParticipantes > 0) {
+        $todosNumeros = range(1, $maxParticipantes);
+        $numerosLibres = array_diff($todosNumeros, $numerosAsignados);
+    } else {
+        // Si no hay máximo definido, mostramos solo los asignados
+        $numerosLibres = [];
+    }
 }
 
 // Procesar formulario si se envió para guardar

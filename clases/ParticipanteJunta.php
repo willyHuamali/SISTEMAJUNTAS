@@ -194,25 +194,24 @@ class ParticipanteJunta {
         }
         
         if (!empty($usuario)) {
-            $query .= " AND (u.Nombre LIKE :usuario OR u.Apellido LIKE :usuario OR u.DNI LIKE :usuario)";
-            $params[':usuario'] = "%$usuario%";
+            $query .= " AND (u.Nombre LIKE :nombreUsuario OR u.Apellido LIKE :apellidoUsuario OR u.DNI LIKE :dniUsuario)";
+            $params[':nombreUsuario'] = "%".$usuario."%";
+            $params[':apellidoUsuario'] = "%".$usuario."%";
+            $params[':dniUsuario'] = "%".$usuario."%";
         }
         
         if ($estado !== '') {
             $query .= " AND pj.Activo = :estado";
-            $params[':estado'] = $estado;
+            $params[':estado'] = (int)$estado;
         }
         
-        $query .= " ORDER BY pj.ParticipanteID DESC LIMIT :offset, :limit";
+        $query .= " ORDER BY pj.ParticipanteID DESC LIMIT $offset, $porPagina";
         
         $stmt = $this->conn->prepare($query);
         
         foreach ($params as $key => $value) {
             $stmt->bindValue($key, $value);
         }
-        
-        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-        $stmt->bindValue(':limit', (int)$porPagina, PDO::PARAM_INT);
         
         $stmt->execute();
         
@@ -224,9 +223,9 @@ class ParticipanteJunta {
      */
     public function contarParticipantesFiltrados($juntaId = '', $usuario = '', $estado = '') {
         $query = "SELECT COUNT(*) as total
-                  FROM {$this->table} pj
-                  JOIN Usuarios u ON pj.UsuarioID = u.UsuarioID
-                  WHERE 1=1";
+                FROM {$this->table} pj
+                JOIN Usuarios u ON pj.UsuarioID = u.UsuarioID
+                WHERE 1=1";
         
         $params = [];
         
@@ -236,8 +235,10 @@ class ParticipanteJunta {
         }
         
         if (!empty($usuario)) {
-            $query .= " AND (u.Nombre LIKE :usuario OR u.Apellido LIKE :usuario OR u.DNI LIKE :usuario)";
-            $params[':usuario'] = "%$usuario%";
+            $query .= " AND (u.Nombre LIKE :nombreUsuario OR u.Apellido LIKE :apellidoUsuario OR u.DNI LIKE :dniUsuario)";
+            $params[':nombreUsuario'] = "%$usuario%";
+            $params[':apellidoUsuario'] = "%$usuario%";
+            $params[':dniUsuario'] = "%$usuario%";
         }
         
         if ($estado !== '') {
@@ -257,6 +258,7 @@ class ParticipanteJunta {
         return $result['total'];
     }
 
+
     // Agrega este método a la clase ParticipanteJunta
     public function obtenerParticipantePorId($participanteId) {
         $query = "SELECT pj.*, u.Nombre, u.Apellido, u.DNI, j.NombreJunta 
@@ -274,6 +276,8 @@ class ParticipanteJunta {
 
     // También necesitarás el método actualizarParticipante que se usa en el formulario
     public function actualizarParticipante($datos) {
+        $activo = isset($datos['Activo']) ? (int)(bool)$datos['Activo'] : 0;
+
         $query = "UPDATE {$this->table} 
                 SET CuentaID = :cuentaId, 
                     GarantiaID = :garantiaId, 
@@ -285,7 +289,7 @@ class ParticipanteJunta {
         $stmt->bindParam(':cuentaId', $datos['CuentaID']);
         $stmt->bindParam(':garantiaId', $datos['GarantiaID']);
         $stmt->bindParam(':ordenRecepcion', $datos['OrdenRecepcion']);
-        $stmt->bindParam(':activo', $datos['Activo']);
+        $stmt->bindParam(':activo', $activo, PDO::PARAM_INT); // Especificamos que es un INT
         $stmt->bindParam(':participanteId', $datos['ParticipanteID']);
         
         return $stmt->execute();
@@ -308,4 +312,61 @@ class ParticipanteJunta {
         
         return $stmt->execute();
     }
+
+
+    /**
+     * Obtiene los números de orden asignados para una junta
+     * @param int $juntaId ID de la junta
+     * @return array Lista de números asignados
+     */
+    public function obtenerNumerosAsignados($juntaId) {
+        $query = "SELECT OrdenRecepcion FROM {$this->table} 
+                WHERE JuntaID = :juntaId AND Activo = 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':juntaId', $juntaId);
+        $stmt->execute();
+        
+        $resultados = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return $resultados ? array_map('intval', $resultados) : [];
+    }
+
+    /**
+     * Obtiene los números de orden disponibles para una junta
+     * @param int $juntaId ID de la junta
+     * @param int $maxParticipantes Máximo de participantes (0 si no hay límite)
+     * @return array Lista de números disponibles
+     */
+    public function obtenerNumerosLibres($juntaId, $maxParticipantes) {
+        $asignados = $this->obtenerNumerosAsignados($juntaId);
+        
+        if ($maxParticipantes <= 0) {
+            return []; // No hay límite, no mostramos números libres
+        }
+        
+        $todosNumeros = range(1, $maxParticipantes);
+        return array_diff($todosNumeros, $asignados);
+    }
+
+    /**
+     * Obtiene información completa sobre números asignados y libres
+     * @param int $juntaId ID de la junta
+     * @return array ['asignados' => [], 'libres' => [], 'maximo' => int]
+     */
+    public function obtenerInfoNumerosJunta($juntaId) {
+        $juntaInfo = $this->obtenerJuntaPorId($juntaId);
+        $maxParticipantes = $juntaInfo['MaximoParticipantes'] ?? 0;
+        
+        $asignados = $this->obtenerNumerosAsignados($juntaId);
+        $libres = $this->obtenerNumerosLibres($juntaId, $maxParticipantes);
+        
+        return [
+            'asignados' => $asignados,
+            'libres' => $libres,
+            'maximo' => $maxParticipantes
+        ];
+    }
+
+
+
+
 }

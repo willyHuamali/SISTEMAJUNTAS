@@ -81,7 +81,7 @@ include __DIR__ . '/../includes/navbar.php';
 
     <!-- Filtros de búsqueda -->
     <div class="card mb-4">
-        <div class="card-header">
+        <div class="card-header bg-light text-dark py-2">
             <i class="fas fa-filter me-1"></i>
             Filtros de búsqueda
         </div>
@@ -135,12 +135,19 @@ include __DIR__ . '/../includes/navbar.php';
                     <i class="fas fa-users me-1"></i>
                     Participantes
                 </div>
-                <?php if ($authHelper->tienePermiso('participantesjuntas.export', $_SESSION['rol_id'])): ?>
-                    <a href="<?php echo url('participantes/exportar.php?'.http_build_query($_GET)); ?>" 
-                    class="btn btn-success btn-sm">
-                        <i class="fas fa-file-export me-1"></i> Exportar
-                    </a>
-                <?php endif; ?>
+                <div class="d-flex gap-2">
+                    <?php if ($authHelper->tienePermiso('participantesjuntas.manage', $_SESSION['rol_id'])): ?>
+                        <a href="<?php echo url('participantes/agregar_par.php'); ?>" class="btn btn-success btn-sm">
+                            <i class="fas fa-user-plus me-1"></i> Agregar Participante
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($authHelper->tienePermiso('participantesjuntas.export', $_SESSION['rol_id'])): ?>
+                        <a href="<?php echo url('participantes/exportar.php?' . http_build_query($_GET)); ?>" 
+                        class="btn btn-success btn-sm">
+                            <i class="fas fa-file-export me-1"></i> Exportar
+                        </a>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
         <div class="card-body">
@@ -177,7 +184,7 @@ include __DIR__ . '/../includes/navbar.php';
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="<?php echo url('participantes/detalle.php?id=' . $participante['ParticipanteID']); ?>" 
+                                            <a href="<?php echo url('participantes/ver_par.php?id=' . $participante['ParticipanteID']); ?>" 
                                                class="btn btn-sm btn-info" title="Ver detalle">
                                                 <i class="fas fa-eye"></i>
                                             </a>

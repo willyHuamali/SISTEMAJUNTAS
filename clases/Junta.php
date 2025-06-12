@@ -244,15 +244,18 @@ class Junta {
     }
 
     // Obtener participantes de una junta
+    // Obtener participantes de una junta
     public function obtenerParticipantes($juntaId) {
         try {
             $query = "SELECT u.UsuarioID, CONCAT(u.Nombre, ' ', u.Apellido) AS NombreCompleto, 
                             u.Email AS CorreoElectronico, u.Telefono,
                             pj.OrdenRecepcion AS Posicion, 
+                            cb.Banco, cb.NumeroCuenta,
                             CASE WHEN pj.Activo = 1 THEN 'Activo' ELSE 'Inactivo' END AS EstadoParticipacion, 
                             pj.FechaRegistro AS FechaCreacion
                     FROM ParticipantesJuntas pj
                     JOIN Usuarios u ON pj.UsuarioID = u.UsuarioID
+                    JOIN CuentasBancarias cb ON pj.CuentaID = cb.CuentaID
                     WHERE pj.JuntaID = :juntaId
                     ORDER BY pj.OrdenRecepcion ASC";
             

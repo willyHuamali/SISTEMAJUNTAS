@@ -5,7 +5,6 @@ require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../clases/Junta.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../clases/AuthHelper.php';
-require_once __DIR__ . '/../clases/ParticipanteJunta.php';
 
 verificarAutenticacion();
 verificarInactividad();
@@ -30,7 +29,6 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 }
 
 $junta = new Junta($db);
-$participanteModel = new ParticipanteJunta($db);
 $juntaDetalle = $junta->obtenerJuntaPorID($_GET['id']);
 
 // Verificar si la junta existe
@@ -55,12 +53,6 @@ if (!$authHelper->tienePermiso('juntas.manage_all', $_SESSION['rol_id'])) {
 
 // Obtener participantes de la junta
 $participantes = $junta->obtenerParticipantes($_GET['id']);
-
-// Obtener información de números asignados/libres
-$infoNumeros = $participanteModel->obtenerInfoNumerosJunta($_GET['id']);
-$numerosAsignados = $infoNumeros['asignados'];
-$numerosLibres = $infoNumeros['libres'];
-$maxParticipantes = $infoNumeros['maximo'];
 
 // Obtener historial de pagos si la junta está en progreso o completada
 $historialPagos = [];
@@ -201,62 +193,6 @@ require_once '../includes/navbar.php';
         </div>
     </div>
 
-    <!-- Números de orden de recepción -->
-    <div class="card mb-4">
-        <div class="card-header bg-light">
-            <div class="d-flex justify-content-between align-items-center">
-                <h4 class="mb-0"><i class="fas fa-list-ol me-2"></i>Números de Orden de Recepción</h4>
-                <?php if ($authHelper->tienePermiso('participantes.add', $_SESSION['rol_id']) && $juntaDetalle['Estado'] == 'Activa'): ?>
-                    <a href="agregar_par.php?junta_id=<?= $juntaDetalle['JuntaID'] ?>" class="btn btn-primary">
-                        <i class="fas fa-user-plus me-1"></i> Agregar Participante
-                    </a>
-                <?php endif; ?>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card bg-light">
-                        <div class="card-header bg-info text-white">
-                            Números Asignados
-                        </div>
-                        <div class="card-body">
-                            <?php if (!empty($numerosAsignados)): ?>
-                                <?php sort($numerosAsignados); ?>
-                                <?php echo implode(', ', $numerosAsignados); ?>
-                            <?php else: ?>
-                                No hay números asignados aún
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card bg-light">
-                        <div class="card-header bg-success text-white">
-                            Números Libres
-                        </div>
-                        <div class="card-body">
-                            <?php if (!empty($numerosLibres)): ?>
-                                <?php sort($numerosLibres); ?>
-                                <?php echo implode(', ', $numerosLibres); ?>
-                            <?php else: ?>
-                                <?php if ($maxParticipantes > 0): ?>
-                                    No hay números libres (todos asignados)
-                                <?php else: ?>
-                                    Esta junta no tiene límite de participantes
-                                <?php endif; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <?php if ($maxParticipantes > 0): ?>
-                <small class="text-muted">Total participantes: <?php echo count($numerosAsignados); ?> de <?php echo $maxParticipantes; ?></small>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <!-- Participantes -->
     <!-- Participantes -->
     <div class="card mb-4">
         <div class="card-header bg-light">
@@ -273,8 +209,6 @@ require_once '../includes/navbar.php';
                                 <th>Correo</th>
                                 <th>Teléfono</th>
                                 <th>Posición</th>
-                                <th>Banco</th>
-                                <th>Número de Cuenta</th>
                                 <th>Estado</th>
                             </tr>
                         </thead>
@@ -286,8 +220,6 @@ require_once '../includes/navbar.php';
                                     <td><?= htmlspecialchars($participante['CorreoElectronico']) ?></td>
                                     <td><?= htmlspecialchars($participante['Telefono'] ?? 'N/A') ?></td>
                                     <td><?= $participante['Posicion'] ?? 'N/A' ?></td>
-                                    <td><?= htmlspecialchars($participante['Banco'] ?? 'N/A') ?></td>
-                                    <td><?= htmlspecialchars($participante['NumeroCuenta'] ?? 'N/A') ?></td>
                                     <td>
                                         <span class="badge bg-<?= $participante['EstadoParticipacion'] == 'Activo' ? 'success' : 'secondary' ?>">
                                             <?= $participante['EstadoParticipacion'] ?>
