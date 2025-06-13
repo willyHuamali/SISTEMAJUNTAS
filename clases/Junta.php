@@ -561,12 +561,12 @@ class Junta {
      */
     public function esParticipante($juntaId, $usuarioId) {
         try {
-            $query = "SELECT COUNT(*) FROM participantes_junta 
-                    WHERE JuntaID = :juntaId AND UsuarioID = :usuarioId AND EstadoParticipacion = 'Activo'";
+            $query = "SELECT COUNT(*) FROM ParticipantesJuntas 
+                    WHERE JuntaID = :juntaId AND UsuarioID = :usuarioId AND Activo = 1";
             
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':juntaId', $juntaId);
-            $stmt->bindParam(':usuarioId', $usuarioId);
+            $stmt->bindParam(':juntaId', $juntaId, PDO::PARAM_INT);
+            $stmt->bindParam(':usuarioId', $usuarioId, PDO::PARAM_INT);
             $stmt->execute();
             
             return $stmt->fetchColumn() > 0;
@@ -659,10 +659,23 @@ class Junta {
      */
         
     public function obtenerJuntaPorID($id) {
-    $query = "SELECT * FROM juntas WHERE JuntaID = ?";
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(1, $id);
-    $stmt->execute();
-    return $stmt->fetch(PDO::FETCH_ASSOC);
-}
+        $query = "SELECT * FROM juntas WHERE JuntaID = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerJuntasPorParticipante($usuarioId) {
+        $query = "SELECT j.* FROM Juntas j
+                INNER JOIN ParticipantesJuntas pj ON j.JuntaID = pj.JuntaID
+                WHERE pj.UsuarioID = :usuarioId AND pj.Activo = 1
+                ORDER BY j.Estado, j.FechaInicio DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':usuarioId', $usuarioId);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

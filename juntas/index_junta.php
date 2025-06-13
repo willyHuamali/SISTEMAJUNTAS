@@ -48,13 +48,17 @@ $registrosPorPagina = 12;
 
 // Obtener juntas según permisos
 if ($authHelper->tienePermiso('juntas.manage_all', $_SESSION['rol_id'])) {
-    $juntas = $junta->obtenerTodasLasJuntas($busqueda, $estadosMostrar, $pagina, $registrosPorPagina);
-    $totalJuntas = $junta->contarTodasLasJuntas($busqueda, $estadosMostrar);
+    // Administrador ve todas las juntas
+    $juntas = $junta->obtenerTodasLasJuntas();
+} elseif ($authHelper->tienePermiso('juntas.view_own_participation', $_SESSION['rol_id'])) {
+    // Participante ve solo juntas en las que participa
+    $juntas = $junta->obtenerJuntasPorParticipante($_SESSION['usuario_id']);
 } else {
-    $juntas = $junta->obtenerJuntasPorUsuario($_SESSION['usuario_id'], $busqueda, $estadosMostrar, $pagina, $registrosPorPagina);
-    $totalJuntas = $junta->contarJuntasPorUsuario($_SESSION['usuario_id'], $busqueda, $estadosMostrar);
+    // Otros roles (como coordinador) pueden tener otras reglas
+    $juntas = $junta->obtenerJuntasPorCreador($_SESSION['usuario_id']);
 }
 
+$totalJuntas = count($juntas); // Obtener el número total de juntas
 $totalPaginas = ceil($totalJuntas / $registrosPorPagina);
 
 // Mensajes
@@ -151,7 +155,7 @@ require_once '../includes/navbar.php';
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted">Participantes:</span>
-                                <strong><?= $jun['NumeroParticipantes'] ?> / <?= $jun['MaximoParticipantes'] ?></strong>
+                                <strong><?= isset($jun['NumeroParticipantes']) ? $jun['NumeroParticipantes'] : '0' ?> / <?= $jun['MaximoParticipantes'] ?></strong>
                             </div>
                             <div class="d-flex justify-content-between mb-3">
                                 <span class="text-muted">Estado:</span>

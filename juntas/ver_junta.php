@@ -41,13 +41,21 @@ if (!$juntaDetalle) {
 }
 
 // Verificar permisos para ver esta junta específica
+// Verificar permisos para ver esta junta específica
 if (!$authHelper->tienePermiso('juntas.manage_all', $_SESSION['rol_id'])) {
     // Si no es administrador, verificar si es participante o creador
     $esParticipante = $junta->esParticipante($_GET['id'], $_SESSION['usuario_id']);
-    $esCreador = ($juntaDetalle['CreadorID'] == $_SESSION['usuario_id']);
+    $esCreador = (isset($juntaDetalle['CreadorID']) && ($juntaDetalle['CreadorID'] == $_SESSION['usuario_id']));
     
     if (!$esParticipante && !$esCreador) {
         $_SESSION['error'] = 'No tienes permiso para ver esta junta';
+        header('Location: index_junta.php');
+        exit;
+    }
+    
+    // Verificar si el participante tiene permiso para ver detalles
+    if ($esParticipante && !$authHelper->tienePermiso('juntas.view_own_participation', $_SESSION['rol_id'])) {
+        $_SESSION['error'] = 'No tienes permiso para ver los detalles de esta junta';
         header('Location: index_junta.php');
         exit;
     }
