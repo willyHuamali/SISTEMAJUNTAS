@@ -77,31 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validar datos
     if (empty($datos['CuentaID'])) {
         $_SESSION['mensaje_error'] = "Debe seleccionar una cuenta bancaria.";
+    } elseif ($participanteModel->actualizarParticipante($datos)) {
+        $_SESSION['mensaje_exito'] = "Participante actualizado correctamente.";
+        header('Location: ' . url('participantes/ver_par.php?id=' . $participanteId));
+        exit;
     } else {
-        // Si se está desactivando el participante, validar campos de retiro
-        if ($datos['Activo'] == 0 && $participante['Activo'] == 1) {
-            $fechaRetiro = $_POST['fecha_retiro'] ?? '';
-            $motivoRetiro = $_POST['motivo_retiro'] ?? '';
-            
-            if (empty($fechaRetiro)) {
-                $_SESSION['mensaje_error'] = "Debe especificar la fecha de retiro.";
-            } elseif (empty($motivoRetiro)) {
-                $_SESSION['mensaje_error'] = "Debe especificar el motivo de retiro.";
-            } else {
-                $datos['FechaRetiro'] = $fechaRetiro;
-                $datos['MotivoRetiro'] = $motivoRetiro;
-            }
-        }
-        
-        if (!isset($_SESSION['mensaje_error'])) {
-            if ($participanteModel->actualizarParticipante($datos)) {
-                $_SESSION['mensaje_exito'] = "Participante actualizado correctamente.";
-                header('Location: ' . url('participantes/ver_par.php?id=' . $participanteId));
-                exit;
-            } else {
-                $_SESSION['mensaje_error'] = "Error al actualizar el participante.";
-            }
-        }
+        $_SESSION['mensaje_error'] = "Error al actualizar el participante.";
     }
 }
 
@@ -211,20 +192,6 @@ include __DIR__ . '/../includes/navbar.php';
                     <label class="form-check-label" for="activo">Participante Activo</label>
                 </div>
                 
-                <!-- Campos de retiro (sólo visibles si se está desactivando) -->
-                <div id="camposRetiro" style="display: <?= $participante['Activo'] ? 'none' : 'block' ?>;">
-                    <div class="mb-3">
-                        <label for="fecha_retiro" class="form-label">Fecha de Retiro *</label>
-                        <input type="date" class="form-control" id="fecha_retiro" name="fecha_retiro" 
-                               value="<?= $participante['FechaRetiro'] ? htmlspecialchars($participante['FechaRetiro']) : date('Y-m-d') ?>">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="motivo_retiro" class="form-label">Motivo de Retiro *</label>
-                        <textarea class="form-control" id="motivo_retiro" name="motivo_retiro" rows="3"><?= $participante['MotivoRetiro'] ? htmlspecialchars($participante['MotivoRetiro']) : '' ?></textarea>
-                    </div>
-                </div>
-                
                 <div class="d-flex justify-content-between">
                     <a href="<?= url('participantes/participantes.php') ?>" class="btn btn-secondary">Cancelar</a>
                     <button type="submit" class="btn btn-primary">Guardar Cambios</button>
@@ -233,19 +200,6 @@ include __DIR__ . '/../includes/navbar.php';
         </div>
     </div>
 </div>
-
-<script>
-// Mostrar/ocultar campos de retiro según el estado del checkbox
-document.getElementById('activo').addEventListener('change', function() {
-    const camposRetiro = document.getElementById('camposRetiro');
-    camposRetiro.style.display = this.checked ? 'none' : 'block';
-    
-    // Si está desmarcado, establecer la fecha actual como predeterminada
-    if (!this.checked) {
-        document.getElementById('fecha_retiro').value = new Date().toISOString().split('T')[0];
-    }
-});
-</script>
 
 <?php
 // Incluir footer

@@ -98,20 +98,7 @@ if ($usuarioLogueado && $authHelper->tienePermiso('notifications.view', $rolUsua
                                         <i class="fas fa-user-plus me-2"></i>Agregar Participante
                                     </a></li>
                                 <?php endif; ?>
-                                
-                                <?php if($authHelper->tienePermiso('participantesjuntas.edit', $rolUsuario)): ?>
-                                    <li><a class="dropdown-item" href="<?php echo url('participantes/editar_par.php'); ?>">
-                                        <i class="fas fa-user-edit me-2"></i>Editar Participante
-                                    </a></li>
-                                <?php endif; ?>
-                                
-                                <?php if($authHelper->tienePermiso('participantesjuntas.assign_order', $rolUsuario)): ?>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="<?php echo url('participantes/asignar_orden_par.php'); ?>">
-                                        <i class="fas fa-sort-numeric-down me-2"></i>Asignar Orden
-                                    </a></li>
-                                <?php endif; ?>
-                                
+
                                 <?php if($authHelper->tienePermiso('participantesjuntas.manage_guarantees', $rolUsuario)): ?>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="<?php echo url('garantias/gestionar_garantia.php'); ?>">

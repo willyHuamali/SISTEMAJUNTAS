@@ -98,10 +98,10 @@ include __DIR__ . '/../includes/navbar.php';
 
                 <?php if (!$participante['Activo']): ?>
                     <dt class="col-sm-3">Fecha de Retiro</dt>
-                    <dd class="col-sm-9"><?php echo htmlspecialchars($participante['FechaRetiro']); ?></dd>
+                    <dd class="col-sm-9"><?php echo $participante['FechaRetiro'] ? htmlspecialchars($participante['FechaRetiro']) : 'N/A'; ?></dd>
 
                     <dt class="col-sm-3">Motivo de Retiro</dt>
-                    <dd class="col-sm-9"><?php echo htmlspecialchars($participante['MotivoRetiro']); ?></dd>
+                    <dd class="col-sm-9"><?php echo $participante['MotivoRetiro'] ? htmlspecialchars($participante['MotivoRetiro']) : 'N/A'; ?></dd>
                 <?php endif; ?>
             </dl>
 

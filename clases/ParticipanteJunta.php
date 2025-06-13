@@ -274,23 +274,38 @@ class ParticipanteJunta {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // También necesitarás el método actualizarParticipante que se usa en el formulario
+   // Método actualizado para actualizar participante
     public function actualizarParticipante($datos) {
         $activo = isset($datos['Activo']) ? (int)(bool)$datos['Activo'] : 0;
-
+        
+        // Construir la consulta dinámicamente
         $query = "UPDATE {$this->table} 
                 SET CuentaID = :cuentaId, 
                     GarantiaID = :garantiaId, 
                     OrdenRecepcion = :ordenRecepcion, 
-                    Activo = :activo
-                WHERE ParticipanteID = :participanteId";
+                    Activo = :activo";
+        
+        // Agregar campos de retiro si se está desactivando
+        if ($activo == 0) {
+            $query .= ", FechaRetiro = :fechaRetiro, MotivoRetiro = :motivoRetiro";
+        } else {
+            $query .= ", FechaRetiro = NULL, MotivoRetiro = NULL";
+        }
+        
+        $query .= " WHERE ParticipanteID = :participanteId";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':cuentaId', $datos['CuentaID']);
         $stmt->bindParam(':garantiaId', $datos['GarantiaID']);
         $stmt->bindParam(':ordenRecepcion', $datos['OrdenRecepcion']);
-        $stmt->bindParam(':activo', $activo, PDO::PARAM_INT); // Especificamos que es un INT
+        $stmt->bindParam(':activo', $activo, PDO::PARAM_INT);
         $stmt->bindParam(':participanteId', $datos['ParticipanteID']);
+        
+        // Bind de parámetros de retiro si existen
+        if ($activo == 0) {
+            $stmt->bindParam(':fechaRetiro', $datos['FechaRetiro']);
+            $stmt->bindParam(':motivoRetiro', $datos['MotivoRetiro']);
+        }
         
         return $stmt->execute();
     }

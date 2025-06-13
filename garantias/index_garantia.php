@@ -30,9 +30,9 @@ require_once '../includes/header.php';
 require_once '../includes/navbar.php';
 
 // Mostrar mensaje de éxito si existe
-if (isset($_SESSION['mensaje_exito'])) {
-    echo '<div class="alert alert-'.$_SESSION['mensaje_exito']['tipo'].' alert-dismissible fade show">
-        <strong>'.$_SESSION['mensaje_exito']['titulo'].'</strong> '.$_SESSION['mensaje_exito']['texto'].'
+if (isset($_SESSION['mensaje_exito']) && is_array($_SESSION['mensaje_exito'])) {
+    echo '<div class="alert alert-'.htmlspecialchars($_SESSION['mensaje_exito']['tipo']).' alert-dismissible fade show">
+        <strong>'.htmlspecialchars($_SESSION['mensaje_exito']['titulo']).'</strong> '.htmlspecialchars($_SESSION['mensaje_exito']['texto']).'
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>';
     unset($_SESSION['mensaje_exito']);
