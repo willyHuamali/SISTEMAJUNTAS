@@ -5,7 +5,6 @@ require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../clases/Junta.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../clases/AuthHelper.php';
-require_once __DIR__ . '/../clases/ParticipanteJunta.php';
 
 verificarAutenticacion();
 verificarInactividad();
@@ -27,6 +26,7 @@ if (empty($_SESSION['csrf_token'])) {
 }
 
 // Procesar formulario si se envió
+// Procesar formulario si se envió
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validar CSRF
     if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $monto = filter_input(INPUT_POST, 'monto', FILTER_VALIDATE_FLOAT);
     $frecuencia = htmlspecialchars($_POST['frecuencia'] ?? '', ENT_QUOTES, 'UTF-8');
     $fechaInicio = htmlspecialchars($_POST['fecha_inicio'] ?? '', ENT_QUOTES, 'UTF-8');
+    // ... resto del código igual
     $maxParticipantes = filter_input(INPUT_POST, 'max_participantes', FILTER_VALIDATE_INT, [
         'options' => ['min_range' => 2, 'max_range' => 50]
     ]);
@@ -83,12 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $junta->DiasGraciaPenalidad = $diasGracia ?? 0;
 
         if ($junta->crear()) {
-            // Registrar al creador como participante con orden 1
-            $participanteJunta = new ParticipanteJunta($db);
-            error_log("Agregando participante - Es creador: true");
-            $participanteJunta->agregarParticipante($junta->JuntaID, $_SESSION['usuario_id'], 1, true);
-           // $participanteJunta->agregarParticipante($junta->JuntaID, $_SESSION['usuario_id'], 1);
-            
             // Registrar en bitácora
             $authHelper->registrarAccion($_SESSION['usuario_id'], 'Creación de junta', "Junta ID: {$junta->JuntaID}");
             
@@ -105,7 +100,6 @@ require_once '../includes/header.php';
 require_once '../includes/navbar.php';
 ?>
 
-<!-- Rest of the HTML form remains exactly the same -->
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-8 mx-auto">

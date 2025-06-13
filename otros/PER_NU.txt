@@ -1,0 +1,40 @@
+-- 10 ACTU PERMISIS JUNTAS
+UPDATE Permisos 
+SET Descripcion = 'Permite asignar y modificar el orden de recepción de fondos para participantes en una junta'
+WHERE Codigo = 'participantesjuntas.assign_order';
+
+--- 12 act participantes VER JUNTAS----
+-- 1Insertar permisos específicos para que los participantes vean sus juntas
+INSERT INTO Permisos (NombrePermiso, Descripcion, Codigo)
+SELECT * FROM (
+    SELECT 'Ver Juntas Propias' AS NombrePermiso, 
+           'Permite ver las juntas en las que el usuario participa' AS Descripcion, 
+           'juntas.view_own_participation' AS Codigo
+    
+    UNION SELECT 'Ver Detalle Junta Propia', 
+           'Permite ver los detalles completos de juntas en las que participa', 
+           'juntas.detail_own_participation'
+) AS nuevos_permisos
+WHERE NOT EXISTS (
+    SELECT 1 FROM Permisos WHERE Codigo = nuevos_permisos.Codigo
+);
+
+-- 2Asignar permisos al rol Participante
+INSERT INTO Roles_Permisos (RolID, PermisoID)
+SELECT r.RolID, p.PermisoID 
+FROM Roles r, Permisos p
+WHERE r.NombreRol = 'Participante' 
+AND p.Codigo IN ('juntas.view_own_participation', 'juntas.detail_own_participation')
+AND NOT EXISTS (
+    SELECT 1 FROM Roles_Permisos rp 
+    WHERE rp.RolID = r.RolID AND rp.PermisoID = p.PermisoID
+);
+
+-- 3Actualizar descripciones de permisos existentes para mayor claridad
+UPDATE Permisos SET 
+    Descripcion = 'Ver todas las juntas (requiere permisos administrativos)'
+WHERE Codigo = 'juntas.view';
+
+UPDATE Permisos SET 
+    Descripcion = 'Ver detalles de cualquier junta (requiere permisos administrativos)'
+WHERE Codigo = 'juntas.detail';

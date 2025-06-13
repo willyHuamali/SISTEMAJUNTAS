@@ -173,7 +173,34 @@ require_once '../includes/navbar.php';
                     <div class="mb-3">
                         <h5 class="text-muted">Reglas</h5>
                         <hr>
-                        <p><?= nl2br(htmlspecialchars($juntaDetalle['Reglas'] ?? 'No se especificaron reglas')) ?></p>
+    
+                        <!-- Add new fields -->
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Requiere garantía:</span>
+                                    <strong><?= isset($juntaDetalle['RequiereGarantia']) ? ($juntaDetalle['RequiereGarantia'] ? 'Sí' : 'No') : 'No especificado' ?></strong>
+                                </div>
+                                <?php if (isset($juntaDetalle['RequiereGarantia']) && $juntaDetalle['RequiereGarantia']): ?>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Monto de garantía:</span>
+                                        <strong>S/ <?= isset($juntaDetalle['MontoGarantia']) ? number_format($juntaDetalle['MontoGarantia'], 2) : '0.00' ?></strong>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-md-6">
+                                <?php if (isset($juntaDetalle['RequiereGarantia']) && $juntaDetalle['RequiereGarantia']): ?>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Penalidad %:</span>
+                                        <strong><?= isset($juntaDetalle['PenalidadPorcentaje']) ? $juntaDetalle['PenalidadPorcentaje'] : '0' ?>%</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Días de gracia:</span>
+                                        <strong><?= isset($juntaDetalle['DiasGracia']) ? $juntaDetalle['DiasGracia'] : '0' ?></strong>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -265,7 +292,6 @@ require_once '../includes/navbar.php';
     </div>
 
     <!-- Participantes -->
-    <!-- Participantes -->
     <div class="card mb-4">
         <div class="card-header bg-light">
             <h4 class="mb-0"><i class="fas fa-users me-2"></i>Participantes</h4>
@@ -287,22 +313,92 @@ require_once '../includes/navbar.php';
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($participantes as $index => $participante): ?>
-                                <tr>
-                                    <td><?= $index + 1 ?></td>
-                                    <td><?= htmlspecialchars($participante['NombreCompleto']) ?></td>
-                                    <td><?= htmlspecialchars($participante['CorreoElectronico']) ?></td>
-                                    <td><?= htmlspecialchars($participante['Telefono'] ?? 'N/A') ?></td>
-                                    <td><?= $participante['Posicion'] ?? 'N/A' ?></td>
-                                    <td><?= htmlspecialchars($participante['Banco'] ?? 'N/A') ?></td>
-                                    <td><?= htmlspecialchars($participante['NumeroCuenta'] ?? 'N/A') ?></td>
-                                    <td>
-                                        <span class="badge bg-<?= $participante['EstadoParticipacion'] == 'Activo' ? 'success' : 'secondary' ?>">
-                                            <?= $participante['EstadoParticipacion'] ?>
-                                        </span>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
+                            <?php 
+                            // First, display the creator if exists
+                            if (isset($juntaDetalle['CreadorID']) && $juntaDetalle['CreadorID']):
+                                $creatorFound = false;
+                                foreach ($participantes as $index => $participante) {
+                                    if ($participante['UsuarioID'] == $juntaDetalle['CreadorID']) {
+                                        $creatorFound = true;
+                                        ?>
+                                        <tr class="table-primary">
+                                            <td>1</td>
+                                            <td><?= htmlspecialchars($participante['NombreCompleto']) ?> <span class="badge bg-info">Creador</span></td>
+                                            <td><?= htmlspecialchars($participante['CorreoElectronico']) ?></td>
+                                            <td><?= htmlspecialchars($participante['Telefono'] ?? 'N/A') ?></td>
+                                            <td><?= $participante['Posicion'] ?? 'N/A' ?></td>
+                                            <td><?= htmlspecialchars($participante['Banco'] ?? 'N/A') ?></td>
+                                            <td><?= htmlspecialchars($participante['NumeroCuenta'] ?? 'N/A') ?></td>
+                                            <td>
+                                                <span class="badge bg-<?= $participante['EstadoParticipacion'] == 'Activo' ? 'success' : 'secondary' ?>">
+                                                    <?= $participante['EstadoParticipacion'] ?>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <?php
+                                        break;
+                                    }
+                                }
+                                
+                                // Now display other participants
+                                $counter = 1;
+                                foreach ($participantes as $index => $participante):
+                                    // Skip the creator as we already displayed it
+                                    if (isset($juntaDetalle['CreadorID']) && $participante['UsuarioID'] == $juntaDetalle['CreadorID']) {
+                                        continue;
+                                    }
+                                    $counter++;
+                                    ?>
+                                    <tr>
+                                        <td><?= $counter ?></td>
+                                        <td><?= htmlspecialchars($participante['NombreCompleto']) ?></td>
+                                        <td><?= htmlspecialchars($participante['CorreoElectronico']) ?></td>
+                                        <td><?= htmlspecialchars($participante['Telefono'] ?? 'N/A') ?></td>
+                                        <td><?= $participante['Posicion'] ?? 'N/A' ?></td>
+                                        <td><?= htmlspecialchars($participante['Banco'] ?? 'N/A') ?></td>
+                                        <td><?= htmlspecialchars($participante['NumeroCuenta'] ?? 'N/A') ?></td>
+                                        <td>
+                                            <span class="badge bg-<?= $participante['EstadoParticipacion'] == 'Activo' ? 'success' : 'secondary' ?>">
+                                                <?= $participante['EstadoParticipacion'] ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endforeach;
+                                
+                                // If creator not found in participants list, add them at position 1
+                                if (!$creatorFound && isset($juntaDetalle['CreadorNombre'])): ?>
+                                    <tr class="table-primary">
+                                        <td>1</td>
+                                        <td><?= htmlspecialchars($juntaDetalle['CreadorNombre']) ?> <span class="badge bg-info">Creador</span></td>
+                                        <td><?= htmlspecialchars($juntaDetalle['CreadorCorreo'] ?? 'N/A') ?></td>
+                                        <td><?= htmlspecialchars($juntaDetalle['CreadorTelefono'] ?? 'N/A') ?></td>
+                                        <td>1</td>
+                                        <td><?= htmlspecialchars($juntaDetalle['CreadorBanco'] ?? 'N/A') ?></td>
+                                        <td><?= htmlspecialchars($juntaDetalle['CreadorCuenta'] ?? 'N/A') ?></td>
+                                        <td>
+                                            <span class="badge bg-success">Activo</span>
+                                        </td>
+                                    </tr>
+                                <?php endif;
+                            else:
+                                // If no creator info, display participants normally
+                                foreach ($participantes as $index => $participante): ?>
+                                    <tr>
+                                        <td><?= $index + 1 ?></td>
+                                        <td><?= htmlspecialchars($participante['NombreCompleto']) ?></td>
+                                        <td><?= htmlspecialchars($participante['CorreoElectronico']) ?></td>
+                                        <td><?= htmlspecialchars($participante['Telefono'] ?? 'N/A') ?></td>
+                                        <td><?= $participante['Posicion'] ?? 'N/A' ?></td>
+                                        <td><?= htmlspecialchars($participante['Banco'] ?? 'N/A') ?></td>
+                                        <td><?= htmlspecialchars($participante['NumeroCuenta'] ?? 'N/A') ?></td>
+                                        <td>
+                                            <span class="badge bg-<?= $participante['EstadoParticipacion'] == 'Activo' ? 'success' : 'secondary' ?>">
+                                                <?= $participante['EstadoParticipacion'] ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endforeach;
+                            endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -313,7 +409,6 @@ require_once '../includes/navbar.php';
             <?php endif; ?>
         </div>
     </div>
-
     <!-- Historial de pagos (si aplica) -->
     <?php if (!empty($historialPagos)): ?>
         <div class="card mb-4">

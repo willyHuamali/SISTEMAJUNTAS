@@ -20,7 +20,7 @@ class ParticipanteJunta {
     }
 
     // Método mejorado para agregar participantes
-    public function agregarParticipante($juntaId, $usuarioId, $orden) {
+    public function agregarParticipante($juntaId, $usuarioId, $orden, $esCreador = false) {
         try {
             $this->conn->beginTransaction();
 
@@ -44,18 +44,27 @@ class ParticipanteJunta {
                 throw new Exception("El orden $orden ya está ocupado por {$result['Nombre']} {$result['Apellido']} (DNI: {$result['DNI']})");
             }
 
-            // 3. Verificar cuenta bancaria principal
-            $query = "SELECT c.CuentaID, c.NumeroCuenta, c.Banco 
-                    FROM CuentasBancarias c
-                    WHERE c.UsuarioID = :usuarioId AND c.EsPrincipal = 1 AND c.Activa = 1";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':usuarioId', $usuarioId);
-            $stmt->execute();
-            $cuentaPrincipal = $stmt->fetch(PDO::FETCH_ASSOC);
+            $cuentaId = null;
+            
+            // 3. Verificar cuenta bancaria principal (solo si no es el creador)
+            if (!$esCreador) {
+                $query = "SELECT c.CuentaID, c.NumeroCuenta, c.Banco 
+                        FROM CuentasBancarias c
+                        WHERE c.UsuarioID = :usuarioId AND c.EsPrincipal = 1 AND c.Activa = 1";
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(':usuarioId', $usuarioId);
+                $stmt->execute();
+                $cuentaPrincipal = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$cuentaPrincipal) {
-                $usuarioInfo = $this->obtenerInfoUsuario($usuarioId);
-                throw new Exception("El usuario {$usuarioInfo['Nombre']} {$usuarioInfo['Apellido']} no tiene una cuenta bancaria principal activa registrada");
+                if (!$cuentaPrincipal) {
+                    $usuarioInfo = $this->obtenerInfoUsuario($usuarioId);
+                    throw new Exception("El usuario {$usuarioInfo['Nombre']} {$usuarioInfo['Apellido']} no tiene una cuenta bancaria principal activa registrada");
+                }
+                
+                $cuentaId = $cuentaPrincipal['CuentaID'];
+            } else {
+                // Crear o seleccionar una cuenta por defecto para el creador
+                $cuentaId = $this->obtenerCuentaPorDefecto($usuarioId);
             }
 
             // 4. Insertar el nuevo participante
@@ -67,7 +76,7 @@ class ParticipanteJunta {
             $insertStmt->bindParam(':juntaId', $juntaId);
             $insertStmt->bindParam(':usuarioId', $usuarioId);
             $insertStmt->bindParam(':orden', $orden);
-            $insertStmt->bindParam(':cuentaId', $cuentaPrincipal['CuentaID']);
+            $insertStmt->bindParam(':cuentaId', $cuentaId);
             
             $resultado = $insertStmt->execute();
             
@@ -80,8 +89,32 @@ class ParticipanteJunta {
         } catch (Exception $e) {
             $this->conn->rollBack();
             error_log("Error en agregarParticipante: " . $e->getMessage());
-            throw $e; // Re-lanzamos la excepción para manejo en el controlador
+            throw $e;
         }
+    }
+
+    private function obtenerCuentaPorDefecto($usuarioId) {
+        // Primero verifica si ya tiene una cuenta (aunque no sea principal)
+        $query = "SELECT CuentaID FROM CuentasBancarias 
+                WHERE UsuarioID = :usuarioId AND Activa = 1 LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':usuarioId', $usuarioId);
+        $stmt->execute();
+        $cuenta = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($cuenta) {
+            return $cuenta['CuentaID'];
+        }
+        
+        // Si no tiene ninguna cuenta, crea una por defecto
+        $insertQuery = "INSERT INTO CuentasBancarias 
+                    (UsuarioID, NumeroCuenta, Banco, TipoCuenta, EsPrincipal, Activa)
+                    VALUES (:usuarioId, 'CUENTA-DEFECTO', 'BANCO-DEFECTO', 'Ahorros', 0, 1)";
+        $insertStmt = $this->conn->prepare($insertQuery);
+        $insertStmt->bindParam(':usuarioId', $usuarioId);
+        $insertStmt->execute();
+        
+        return $this->conn->lastInsertId();
     }
 
     private function obtenerInfoUsuario($usuarioId) {
